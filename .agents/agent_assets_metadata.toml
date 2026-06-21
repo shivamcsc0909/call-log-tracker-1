@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "2eLD4Ef8COq4GOpBpApMM"
+uri = "file://artifacts/call-tracker/assets/images/icon.png"
+type = "image"
+title = "call tracker app icon"

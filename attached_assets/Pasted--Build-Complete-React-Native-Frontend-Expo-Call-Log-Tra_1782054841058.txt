@@ -1,0 +1,355 @@
+# Build Complete React Native Frontend (Expo) - Call Log Tracking App
+
+You are a Senior React Native Architect and UI/UX Engineer.
+
+Build a COMPLETE production-ready React Native frontend using:
+
+* React Native (Expo)
+* TypeScript
+* React Navigation
+* React Native Paper OR NativeWind (modern UI)
+* React Hook Form
+* Zustand for state management
+* Axios
+* AsyncStorage
+* Lucide Icons
+
+IMPORTANT:
+Currently backend is NOT integrated.
+Use MOCK DATA and MOCK API services everywhere.
+Code structure should be scalable so real APIs can be plugged in later.
+
+---
+
+## PROJECT OVERVIEW
+
+This is an Employee Call Tracking Application.
+
+Users login into the app.
+
+After login they can:
+
+* View sync status
+* View captured call logs
+* Manually sync logs
+* Grant required permissions
+* See profile details
+* Logout
+
+Actual call log integration will be added later.
+
+For now use MOCK CALL LOG DATA.
+
+---
+
+## DESIGN REQUIREMENTS
+
+Create a premium modern SaaS style UI.
+
+Design inspiration:
+
+* Notion Mobile
+* Linear
+* Stripe Dashboard
+* Slack Mobile
+
+Requirements:
+
+* Clean spacing
+* Professional typography
+* Rounded cards
+* Soft shadows
+* Smooth animations
+* Modern dark/light theme support
+* Responsive for all Android devices
+
+Do NOT create beginner-level UI.
+
+Make it look like a real enterprise application.
+
+---
+
+## APP FLOW
+
+Splash Screen
+↓
+Login Screen
+↓
+Permission Screen
+↓
+Dashboard
+↓
+Call Logs
+↓
+Profile
+↓
+Logout
+
+---
+
+## SCREENS REQUIRED
+
+1. Splash Screen
+
+Features:
+
+* App Logo
+* Company Name
+* Loading animation
+* Auto redirect
+
+---
+
+2. Login Screen
+
+Fields:
+
+* Employee ID / Email
+* Password
+
+Buttons:
+
+* Login
+* Forgot Password
+
+Validation required.
+
+Use mock login API:
+
+email: [demo@company.com](mailto:demo@company.com)
+password: 123456
+
+Successful login redirects to permissions.
+
+---
+
+3. Permission Screen
+
+Beautiful permission cards.
+
+Permissions:
+
+* Call Log Access
+* Phone State Access
+
+Each card should contain:
+
+* Icon
+* Description
+* Grant Button
+
+Use mocked permission responses.
+
+After permissions granted:
+
+Continue Button
+
+---
+
+4. Dashboard Screen
+
+Modern dashboard cards.
+
+Show:
+
+Today's Calls
+Weekly Calls
+Total Duration
+Sync Status
+
+Use mock data.
+
+Example:
+
+Today's Calls: 18
+Weekly Calls: 126
+Duration: 7h 35m
+Sync Status: Synced
+
+Add quick action buttons:
+
+* View Logs
+* Sync Now
+* Refresh
+
+---
+
+5. Call Logs Screen
+
+Professional table/card layout.
+
+Mock Data:
+
+[
+{
+id:1,
+number:"+91 9876543210",
+duration:"4m 20s",
+date:"21 Jun 2026",
+time:"11:45 AM",
+status:"Synced"
+}
+]
+
+Features:
+
+* Search
+* Filter
+* Pull to refresh
+* Empty state
+* Loading state
+
+---
+
+6. Sync Screen
+
+Show:
+
+Pending Records
+Synced Records
+Last Sync Time
+
+Add:
+
+Sync Now Button
+
+When clicked:
+
+Show progress animation
+
+Mock API call
+
+Success toast
+
+---
+
+7. Profile Screen
+
+Show:
+
+Name
+Employee ID
+Department
+Email
+
+Mock values.
+
+Actions:
+
+* Edit Profile
+* Settings
+* Logout
+
+---
+
+8. Settings Screen
+
+Options:
+
+* Dark Mode Toggle
+* Notifications Toggle
+* App Version
+* Privacy Policy
+* About
+
+---
+
+## BOTTOM TAB NAVIGATION
+
+Tabs:
+
+Dashboard
+Logs
+Sync
+Profile
+
+Use modern icons.
+
+---
+
+## STATE MANAGEMENT
+
+Create Zustand stores:
+
+authStore
+callLogStore
+permissionStore
+syncStore
+
+---
+
+## MOCK API LAYER
+
+Create complete mock service layer.
+
+Structure:
+
+services/
+authService.ts
+callLogService.ts
+syncService.ts
+
+Use Promise based fake APIs.
+
+Add network delay simulation.
+
+---
+
+## PROJECT STRUCTURE
+
+src/
+
+components/
+screens/
+navigation/
+services/
+store/
+hooks/
+constants/
+utils/
+assets/
+
+---
+
+## EXTRA FEATURES
+
+Add:
+
+* Skeleton loaders
+* Empty states
+* Error states
+* Toast notifications
+* Pull to refresh
+* Reusable components
+* Theme system
+* Reusable buttons
+* Reusable cards
+* Form validation
+
+---
+
+## CODE QUALITY
+
+Requirements:
+
+* TypeScript everywhere
+* Proper folder structure
+* No hardcoded UI duplication
+* Reusable components
+* Clean architecture
+* Future backend integration ready
+
+---
+
+## DELIVERABLE
+
+Generate ALL files with COMPLETE code.
+
+Do not generate placeholders.
+
+Generate a fully working Expo React Native frontend application that can run immediately after:
+
+npm install
+npx expo start
+
+Use mock data now but keep architecture ready for future real API integration.

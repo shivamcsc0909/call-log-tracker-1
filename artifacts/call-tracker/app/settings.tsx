@@ -11,9 +11,21 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AppHeader } from "@/components/ui/AppHeader";
+import { AppCard } from "@/components/ui/AppCard";
 import { useColors } from "@/hooks/useColors";
+import spacing, { typography } from "@/constants/spacing";
 
-interface SettingRowProps {
+function SettingRow({
+  icon,
+  label,
+  value,
+  toggle,
+  toggleValue,
+  onToggle,
+  onPress,
+  last = false,
+}: {
   icon: keyof typeof Feather.glyphMap;
   label: string;
   value?: string;
@@ -21,24 +33,25 @@ interface SettingRowProps {
   toggleValue?: boolean;
   onToggle?: (v: boolean) => void;
   onPress?: () => void;
-  danger?: boolean;
-  hideChevron?: boolean;
-}
-
-function SettingRow({ icon, label, value, toggle, toggleValue, onToggle, onPress, danger, hideChevron }: SettingRowProps) {
+  last?: boolean;
+}) {
   const colors = useColors();
   return (
     <Pressable
-      onPress={onPress}
+      onPress={!toggle ? onPress : undefined}
       style={({ pressed }) => [
         styles.row,
-        { borderBottomColor: colors.border, opacity: pressed && !toggle ? 0.7 : 1 },
+        {
+          borderBottomColor: colors.border,
+          borderBottomWidth: last ? 0 : 1,
+          opacity: pressed && !toggle ? 0.7 : 1,
+        },
       ]}
     >
-      <View style={[styles.rowIcon, { backgroundColor: danger ? colors.destructive + "18" : colors.muted, borderRadius: 8 }]}>
-        <Feather name={icon} size={16} color={danger ? colors.destructive : colors.primary} />
+      <View style={[styles.rowIcon, { backgroundColor: colors.secondary, borderRadius: 9 }]}>
+        <Feather name={icon} size={15} color={colors.primary} />
       </View>
-      <Text style={[styles.rowLabel, { color: danger ? colors.destructive : colors.foreground }]}>{label}</Text>
+      <Text style={[styles.rowLabel, { color: colors.foreground }]}>{label}</Text>
       {toggle ? (
         <Switch
           value={toggleValue}
@@ -47,10 +60,12 @@ function SettingRow({ icon, label, value, toggle, toggleValue, onToggle, onPress
           thumbColor={toggleValue ? colors.primary : colors.mutedForeground}
         />
       ) : (
-        <>
-          {value && <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>{value}</Text>}
-          {!hideChevron && <Feather name="chevron-right" size={16} color={colors.mutedForeground} />}
-        </>
+        <View style={styles.rowRight}>
+          {value && (
+            <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>{value}</Text>
+          )}
+          <Feather name="chevron-right" size={15} color={colors.mutedForeground} />
+        </View>
       )}
     </Pressable>
   );
@@ -59,64 +74,44 @@ function SettingRow({ icon, label, value, toggle, toggleValue, onToggle, onPress
 export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
+  const [autoSync, setAutoSync] = useState(true);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View
-        style={[
-          styles.navBar,
-          {
-            paddingTop: insets.top + 8,
-            backgroundColor: colors.card,
-            borderBottomColor: colors.border,
-          },
-        ]}
-      >
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Feather name="arrow-left" size={20} color={colors.foreground} />
-        </Pressable>
-        <Text style={[styles.navTitle, { color: colors.foreground }]}>Settings</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
+      <AppHeader title="Settings" showBack />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xl }}
       >
         <Text style={[styles.section, { color: colors.mutedForeground }]}>Preferences</Text>
-        <View style={[styles.group, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <SettingRow
-            icon="moon"
-            label="Dark Mode"
-            toggle
-            toggleValue={darkMode}
-            onToggle={setDarkMode}
-          />
-          <SettingRow
-            icon="bell"
-            label="Notifications"
-            toggle
-            toggleValue={notifications}
-            onToggle={setNotifications}
-          />
-        </View>
+        <AppCard style={styles.card} padding={0}>
+          <SettingRow icon="moon" label="Dark Mode" toggle toggleValue={darkMode} onToggle={setDarkMode} />
+          <SettingRow icon="bell" label="Push Notifications" toggle toggleValue={notifications} onToggle={setNotifications} />
+          <SettingRow icon="refresh-cw" label="Auto Sync" toggle toggleValue={autoSync} onToggle={setAutoSync} last />
+        </AppCard>
 
-        <Text style={[styles.section, { color: colors.mutedForeground }]}>Information</Text>
-        <View style={[styles.group, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <SettingRow icon="info" label="App Version" value="1.0.0" hideChevron />
+        <Text style={[styles.section, { color: colors.mutedForeground }]}>App Info</Text>
+        <AppCard style={styles.card} padding={0}>
+          <SettingRow icon="info" label="App Version" value="1.0.0" />
+          <SettingRow icon="tag" label="Build Number" value="100" />
+          <SettingRow icon="code" label="Environment" value="Production" last />
+        </AppCard>
+
+        <Text style={[styles.section, { color: colors.mutedForeground }]}>Legal</Text>
+        <AppCard style={styles.card} padding={0}>
           <SettingRow icon="shield" label="Privacy Policy" onPress={() => {}} />
           <SettingRow icon="file-text" label="Terms of Service" onPress={() => {}} />
-          <SettingRow icon="help-circle" label="About CallTrack Pro" onPress={() => {}} />
-        </View>
+          <SettingRow icon="book-open" label="Licenses" onPress={() => {}} last />
+        </AppCard>
 
         <Text style={[styles.section, { color: colors.mutedForeground }]}>Support</Text>
-        <View style={[styles.group, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <AppCard style={styles.card} padding={0}>
           <SettingRow icon="mail" label="Contact Support" onPress={() => {}} />
           <SettingRow icon="star" label="Rate App" onPress={() => {}} />
-        </View>
+          <SettingRow icon="share-2" label="Share App" onPress={() => {}} last />
+        </AppCard>
       </ScrollView>
     </View>
   );
@@ -124,53 +119,22 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  navBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingBottom: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-  },
-  backBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
-  navTitle: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
   section: {
-    fontSize: 11,
-    fontFamily: "Inter_600SemiBold",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginHorizontal: 16,
-    marginTop: 24,
-    marginBottom: 8,
+    ...typography.label,
+    marginHorizontal: spacing.screenH,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
   },
-  group: {
-    marginHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: "hidden",
-  },
+  card: { marginHorizontal: spacing.screenH },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    gap: 12,
+    paddingHorizontal: spacing.base,
+    paddingVertical: 13,
+    gap: spacing.md,
   },
-  rowIcon: {
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  rowLabel: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
-  },
-  rowValue: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    marginRight: 4,
-  },
+  rowIcon: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
+  rowLabel: { flex: 1, ...typography.body },
+  rowRight: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+  rowValue: { ...typography.bodyMedium },
 });

@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import {
   Alert,
   Pressable,
@@ -12,39 +12,73 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AppButton } from "@/components/ui/AppButton";
+import { AppCard } from "@/components/ui/AppCard";
 import { useColors } from "@/hooks/useColors";
+import spacing, { shadow, typography } from "@/constants/spacing";
 import { useAuthStore } from "@/store/authStore";
 import { usePermissionStore } from "@/store/permissionStore";
 
-function ProfileMenuItem({
+function MenuRow({
   icon,
   label,
   value,
   onPress,
   danger,
+  showArrow = true,
 }: {
   icon: keyof typeof Feather.glyphMap;
   label: string;
   value?: string;
   onPress: () => void;
   danger?: boolean;
+  showArrow?: boolean;
 }) {
   const colors = useColors();
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
-        styles.menuItem,
+        styles.menuRow,
         { borderBottomColor: colors.border, opacity: pressed ? 0.7 : 1 },
       ]}
     >
-      <View style={[styles.menuIcon, { backgroundColor: danger ? colors.destructive + "14" : colors.muted, borderRadius: 8 }]}>
-        <Feather name={icon} size={16} color={danger ? colors.destructive : colors.primary} />
+      <View
+        style={[
+          styles.menuIcon,
+          {
+            backgroundColor: danger ? colors.destructive + "14" : colors.secondary,
+            borderRadius: 9,
+          },
+        ]}
+      >
+        <Feather name={icon} size={15} color={danger ? colors.destructive : colors.primary} />
       </View>
-      <Text style={[styles.menuLabel, { color: danger ? colors.destructive : colors.foreground }]}>{label}</Text>
-      {value && <Text style={[styles.menuValue, { color: colors.mutedForeground }]}>{value}</Text>}
-      <Feather name="chevron-right" size={16} color={danger ? colors.destructive : colors.mutedForeground} />
+      <Text
+        style={[
+          styles.menuLabel,
+          { color: danger ? colors.destructive : colors.foreground },
+        ]}
+      >
+        {label}
+      </Text>
+      {value && (
+        <Text style={[styles.menuValue, { color: colors.mutedForeground }]}>{value}</Text>
+      )}
+      {showArrow && (
+        <Feather name="chevron-right" size={15} color={colors.mutedForeground} />
+      )}
     </Pressable>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  const colors = useColors();
+  return (
+    <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+      <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>{label}</Text>
+      <Text style={[styles.infoValue, { color: colors.foreground }]}>{value}</Text>
+    </View>
   );
 }
 
@@ -55,32 +89,28 @@ export default function ProfileScreen() {
   const { user, logout, isLoading } = useAuthStore();
   const { reset: resetPermissions } = usePermissionStore();
 
-  const handleLogout = () => {
-    Alert.alert(
-      "Sign Out",
-      "Are you sure you want to sign out of your account?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Sign Out",
-          style: "destructive",
-          onPress: async () => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-            resetPermissions();
-            await logout();
-            router.replace("/login");
-          },
-        },
-      ]
-    );
-  };
-
   const initials = user?.name
     .split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase()
-    .slice(0, 2) ?? "?";
+    .slice(0, 2) ?? "??";
+
+  const handleLogout = () => {
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          resetPermissions();
+          await logout();
+          router.replace("/login");
+        },
+      },
+    ]);
+  };
 
   return (
     <ScrollView
@@ -88,100 +118,110 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
     >
+      {/* Avatar Card */}
       <View
         style={[
-          styles.profileCard,
-          {
-            backgroundColor: colors.card,
-            borderColor: colors.border,
-            borderRadius: colors.radius + 4,
-            marginHorizontal: 16,
-            marginTop: 16,
-          },
+          styles.avatarCard,
+          { backgroundColor: colors.card, borderBottomColor: colors.border },
         ]}
       >
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+        <View style={[styles.avatar, { backgroundColor: colors.primary }, shadow.md]}>
           <Text style={styles.avatarText}>{initials}</Text>
         </View>
         <Text style={[styles.name, { color: colors.foreground }]}>{user?.name}</Text>
         <Text style={[styles.role, { color: colors.primary }]}>{user?.role}</Text>
-        <Text style={[styles.dept, { color: colors.mutedForeground }]}>{user?.department}</Text>
-
-        <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-        <View style={styles.infoRow}>
-          {[
-            { label: "Employee ID", value: user?.employeeId ?? "—" },
-            { label: "Email", value: user?.email ?? "—" },
-          ].map((item) => (
-            <View key={item.label} style={styles.infoItem}>
-              <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>{item.label}</Text>
-              <Text style={[styles.infoValue, { color: colors.foreground }]} numberOfLines={1}>
-                {item.value}
-              </Text>
-            </View>
-          ))}
+        <View
+          style={[
+            styles.deptBadge,
+            { backgroundColor: colors.secondary, borderRadius: 8 },
+          ]}
+        >
+          <Feather name="briefcase" size={12} color={colors.primary} />
+          <Text style={[styles.deptText, { color: colors.secondaryForeground }]}>
+            {user?.department}
+          </Text>
         </View>
       </View>
 
-      <Text style={[styles.section, { color: colors.mutedForeground }]}>Account</Text>
-      <View style={[styles.group, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <ProfileMenuItem
+      {/* Info Card */}
+      <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
+        Account Details
+      </Text>
+      <AppCard style={styles.infoCard} padding={0}>
+        <InfoRow label="Employee ID" value={user?.employeeId ?? "—"} />
+        <InfoRow label="Email" value={user?.email ?? "—"} />
+        <InfoRow label="Department" value={user?.department ?? "—"} />
+        <View style={[styles.infoRow, { borderBottomWidth: 0, borderBottomColor: "transparent" }]}>
+          <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Member Since</Text>
+          <Text style={[styles.infoValue, { color: colors.foreground }]}>Jan 2024</Text>
+        </View>
+      </AppCard>
+
+      {/* Stats */}
+      <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>Activity</Text>
+      <View style={styles.statsRow}>
+        {[
+          { label: "Total Calls", value: "126" },
+          { label: "Synced", value: "122" },
+          { label: "This Week", value: "18" },
+        ].map((s) => (
+          <View
+            key={s.label}
+            style={[
+              styles.statBox,
+              shadow.xs,
+              { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 14 },
+            ]}
+          >
+            <Text style={[styles.statValue, { color: colors.foreground }]}>{s.value}</Text>
+            <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{s.label}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Actions */}
+      <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>Manage</Text>
+      <AppCard style={styles.menuCard} padding={0}>
+        <MenuRow
           icon="user"
           label="Edit Profile"
           onPress={() => Alert.alert("Edit Profile", "Profile editing coming soon.")}
         />
-        <ProfileMenuItem
+        <MenuRow
           icon="settings"
           label="Settings"
           onPress={() => router.push("/settings")}
         />
-        <ProfileMenuItem
+        <MenuRow
           icon="shield"
           label="Permissions"
           onPress={() => router.push("/permissions")}
         />
-      </View>
-
-      <Text style={[styles.section, { color: colors.mutedForeground }]}>Stats</Text>
-      <View style={[styles.group, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <ProfileMenuItem
+        <MenuRow
+          icon="help-circle"
+          label="Help & Support"
+          onPress={() => {}}
+          showArrow
+        />
+        <MenuRow
           icon="phone-call"
-          label="Total Calls"
+          label="Total Calls Logged"
           value="126"
           onPress={() => {}}
+          showArrow={false}
         />
-        <ProfileMenuItem
-          icon="upload-cloud"
-          label="Synced Records"
-          value="122"
-          onPress={() => {}}
-        />
-        <ProfileMenuItem
-          icon="calendar"
-          label="Member Since"
-          value="Jan 2024"
-          onPress={() => {}}
-        />
-      </View>
+      </AppCard>
 
-      <View style={[styles.signOutContainer, { marginHorizontal: 16, marginTop: 16 }]}>
-        <Pressable
+      {/* Sign Out */}
+      <View style={styles.signOut}>
+        <AppButton
+          label="Sign Out"
+          variant="danger"
           onPress={handleLogout}
-          disabled={isLoading}
-          style={({ pressed }) => [
-            styles.signOutBtn,
-            {
-              backgroundColor: colors.destructive + "12",
-              borderColor: colors.destructive + "40",
-              borderRadius: colors.radius,
-              opacity: pressed ? 0.75 : 1,
-            },
-          ]}
-        >
-          <Feather name="log-out" size={18} color={colors.destructive} />
-          <Text style={[styles.signOutText, { color: colors.destructive }]}>Sign Out</Text>
-        </Pressable>
+          loading={isLoading}
+          size="lg"
+          leftIcon={<Feather name="log-out" size={17} color="#fff" />}
+        />
       </View>
     </ScrollView>
   );
@@ -189,16 +229,12 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  profileCard: {
+  avatarCard: {
     alignItems: "center",
-    padding: 24,
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 4,
-    marginBottom: 8,
+    paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.screenH,
+    borderBottomWidth: 1,
+    gap: spacing.sm,
   },
   avatar: {
     width: 80,
@@ -206,56 +242,61 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 14,
-    shadowColor: "#4F46E5",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
+    marginBottom: spacing.xs,
   },
-  avatarText: { fontSize: 28, fontFamily: "Inter_700Bold", color: "#fff" },
-  name: { fontSize: 20, fontFamily: "Inter_700Bold", marginBottom: 4 },
-  role: { fontSize: 13, fontFamily: "Inter_600SemiBold", marginBottom: 4 },
-  dept: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  divider: { height: 1, width: "100%", marginVertical: 16 },
-  infoRow: { width: "100%", gap: 10 },
-  infoItem: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  infoLabel: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  infoValue: { fontSize: 13, fontFamily: "Inter_500Medium", flex: 1, textAlign: "right" },
-  section: {
-    fontSize: 11,
-    fontFamily: "Inter_600SemiBold",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginHorizontal: 16,
-    marginTop: 20,
-    marginBottom: 8,
-  },
-  group: {
-    marginHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: "hidden",
-  },
-  menuItem: {
+  avatarText: { fontSize: 30, fontFamily: "Inter_700Bold", color: "#fff" },
+  name: { fontSize: 22, fontFamily: "Inter_700Bold", letterSpacing: -0.4 },
+  role: { ...typography.bodyMedium },
+  deptBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
+    gap: 5,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 5,
+    marginTop: spacing.xs,
+  },
+  deptText: { ...typography.captionMedium },
+  sectionLabel: {
+    ...typography.label,
+    marginHorizontal: spacing.screenH,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
+  },
+  infoCard: { marginHorizontal: spacing.screenH },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: spacing.base,
     paddingVertical: 13,
     borderBottomWidth: 1,
-    gap: 12,
   },
-  menuIcon: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
-  menuLabel: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular" },
-  menuValue: { fontSize: 13, fontFamily: "Inter_400Regular", marginRight: 4 },
-  signOutContainer: {},
-  signOutBtn: {
+  infoLabel: { ...typography.bodyMedium },
+  infoValue: { ...typography.bodyMedium, textAlign: "right", flex: 1, marginLeft: spacing.md },
+  statsRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.screenH,
+  },
+  statBox: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: spacing.base,
+    borderWidth: 1,
+  },
+  statValue: { fontSize: 22, fontFamily: "Inter_700Bold", letterSpacing: -0.5 },
+  statLabel: { ...typography.caption, marginTop: 2 },
+  menuCard: { marginHorizontal: spacing.screenH },
+  menuRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    height: 50,
-    borderWidth: 1,
-    gap: 10,
+    paddingHorizontal: spacing.base,
+    paddingVertical: 13,
+    borderBottomWidth: 1,
+    gap: spacing.md,
   },
-  signOutText: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  menuIcon: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
+  menuLabel: { flex: 1, ...typography.body },
+  menuValue: { ...typography.bodyMedium },
+  signOut: { marginHorizontal: spacing.screenH, marginTop: spacing.xl },
 });

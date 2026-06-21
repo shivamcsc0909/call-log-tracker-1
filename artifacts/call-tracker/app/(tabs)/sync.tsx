@@ -2,7 +2,6 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { useEffect } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,15 +11,19 @@ import {
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AppButton } from "@/components/ui/AppButton";
+import { AppCard } from "@/components/ui/AppCard";
+import { SectionTitle } from "@/components/ui/SectionTitle";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useColors } from "@/hooks/useColors";
+import spacing, { shadow, typography } from "@/constants/spacing";
 import { useSyncStore } from "@/store/syncStore";
 
-function SyncStatCard({
+function StatPill({
   label,
   value,
   icon,
@@ -35,59 +38,42 @@ function SyncStatCard({
   return (
     <View
       style={[
-        styles.syncStat,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-          borderRadius: colors.radius,
-        },
+        styles.statPill,
+        shadow.xs,
+        { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 14 },
       ]}
     >
-      <View style={[styles.syncStatIcon, { backgroundColor: color + "18", borderRadius: 10 }]}>
-        <Feather name={icon} size={18} color={color} />
+      <View style={[styles.statIcon, { backgroundColor: color + "14", borderRadius: 10 }]}>
+        <Feather name={icon} size={16} color={color} />
       </View>
-      <Text style={[styles.syncStatValue, { color: colors.foreground }]}>{value}</Text>
-      <Text style={[styles.syncStatLabel, { color: colors.mutedForeground }]}>{label}</Text>
+      <Text style={[styles.statValue, { color: colors.foreground }]}>{value}</Text>
+      <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{label}</Text>
     </View>
   );
 }
 
+const HISTORY = [
+  { time: "Today, 11:45 AM", count: 12, status: "Synced" as const },
+  { time: "Yesterday, 6:30 PM", count: 8, status: "Synced" as const },
+  { time: "Jun 20, 10:15 AM", count: 15, status: "Synced" as const },
+  { time: "Jun 19, 4:22 PM", count: 3, status: "Pending" as const },
+];
+
 export default function SyncScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const {
-    pendingCount,
-    syncedCount,
-    failedCount,
-    lastSyncTime,
-    isSyncing,
-    syncProgress,
-    fetchStatus,
-    syncNow,
-  } = useSyncStore();
+  const { pendingCount, syncedCount, failedCount, lastSyncTime, isSyncing, syncProgress, fetchStatus, syncNow } = useSyncStore();
 
   const progressWidth = useSharedValue(0);
-  const pulseScale = useSharedValue(1);
+
+  useEffect(() => { fetchStatus(); }, []);
 
   useEffect(() => {
-    fetchStatus();
-  }, []);
+    progressWidth.value = withTiming(syncProgress / 100, { duration: 250 });
+  }, [syncProgress]);
 
-  useEffect(() => {
-    progressWidth.value = withTiming(syncProgress / 100, { duration: 200 });
-    if (isSyncing) {
-      pulseScale.value = withSpring(1.05);
-    } else {
-      pulseScale.value = withSpring(1);
-    }
-  }, [syncProgress, isSyncing]);
-
-  const progressStyle = useAnimatedStyle(() => ({
+  const barStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value * 100}%`,
-  }));
-
-  const pulseStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseScale.value }],
   }));
 
   const handleSync = async () => {
@@ -96,199 +82,162 @@ export default function SyncScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
+  const overallStatus = pendingCount > 0 ? "Pending" : failedCount > 0 ? "Failed" : "Synced";
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.heroCard, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius + 4, marginHorizontal: 16, marginTop: 16 }]}>
-        <Animated.View style={[styles.syncIconWrap, { backgroundColor: colors.primary + "18" }, pulseStyle]}>
-          {isSyncing ? (
-            <ActivityIndicator size="large" color={colors.primary} />
-          ) : (
-            <Feather name="refresh-cw" size={32} color={colors.primary} />
-          )}
-        </Animated.View>
-        <Text style={[styles.heroTitle, { color: colors.foreground }]}>
-          {isSyncing ? "Syncing..." : "Call Log Sync"}
-        </Text>
-        <Text style={[styles.heroSub, { color: colors.mutedForeground }]}>
-          {isSyncing
-            ? `Uploading records to server (${Math.round(syncProgress)}%)`
-            : lastSyncTime
-              ? `Last synced: ${lastSyncTime}`
-              : "Never synced"}
-        </Text>
+      {/* Hero */}
+      <View style={[styles.hero, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <View style={[styles.heroIcon, { backgroundColor: isSyncing ? colors.warningMuted : colors.secondary, borderRadius: 20 }]}>
+          <Feather
+            name="refresh-cw"
+            size={28}
+            color={isSyncing ? colors.warning : colors.primary}
+          />
+        </View>
+        <View style={styles.heroText}>
+          <Text style={[styles.heroTitle, { color: colors.foreground }]}>
+            {isSyncing ? "Syncing records…" : "Call Log Sync"}
+          </Text>
+          <Text style={[styles.heroSub, { color: colors.mutedForeground }]}>
+            {isSyncing
+              ? `Uploading ${pendingCount} records to server`
+              : lastSyncTime
+                ? `Last synced ${lastSyncTime}`
+                : "Never synced"}
+          </Text>
+        </View>
+        <StatusBadge status={overallStatus} size="md" />
+      </View>
 
-        {isSyncing && (
-          <View style={[styles.progressTrack, { backgroundColor: colors.muted, borderRadius: 6 }]}>
+      {/* Progress Bar */}
+      {isSyncing && (
+        <View style={[styles.progressWrap, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+          <View style={styles.progressHeader}>
+            <Text style={[styles.progressLabel, { color: colors.foreground }]}>Upload progress</Text>
+            <Text style={[styles.progressPct, { color: colors.primary }]}>
+              {Math.round(syncProgress)}%
+            </Text>
+          </View>
+          <View style={[styles.progressTrack, { backgroundColor: colors.muted, borderRadius: 4 }]}>
             <Animated.View
               style={[
                 styles.progressFill,
-                { backgroundColor: colors.primary, borderRadius: 6 },
-                progressStyle,
+                { backgroundColor: colors.primary, borderRadius: 4 },
+                barStyle,
               ]}
             />
           </View>
-        )}
+        </View>
+      )}
 
-        <Pressable
+      {/* Summary */}
+      <SectionTitle title="Summary" />
+      <View style={styles.stats}>
+        <StatPill label="Pending" value={pendingCount} icon="clock" color={colors.warning} />
+        <StatPill label="Synced" value={syncedCount} icon="check-circle" color={colors.success} />
+        <StatPill label="Failed" value={failedCount} icon="alert-circle" color={colors.destructive} />
+      </View>
+
+      {/* CTA */}
+      <View style={styles.cta}>
+        <AppButton
+          label={isSyncing ? "Syncing…" : "Sync Now"}
           onPress={handleSync}
-          disabled={isSyncing}
-          style={({ pressed }) => [
-            styles.syncBtn,
-            {
-              backgroundColor: isSyncing ? colors.muted : colors.primary,
-              borderRadius: colors.radius,
-              opacity: pressed ? 0.85 : 1,
-            },
-          ]}
-        >
-          {isSyncing ? (
-            <Text style={[styles.syncBtnText, { color: colors.mutedForeground }]}>Syncing...</Text>
-          ) : (
-            <>
-              <Feather name="upload-cloud" size={18} color={colors.primaryForeground} />
-              <Text style={[styles.syncBtnText, { color: colors.primaryForeground }]}>Sync Now</Text>
-            </>
-          )}
-        </Pressable>
+          loading={isSyncing}
+          size="lg"
+          leftIcon={!isSyncing ? <Feather name="upload-cloud" size={18} color="#fff" /> : undefined}
+        />
       </View>
 
-      <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Sync Summary</Text>
-      <View style={styles.statsRow}>
-        <SyncStatCard label="Pending" value={pendingCount} icon="clock" color={colors.warning} />
-        <SyncStatCard label="Synced" value={syncedCount} icon="check-circle" color={colors.success} />
-        <SyncStatCard label="Failed" value={failedCount} icon="alert-circle" color={colors.destructive} />
-      </View>
-
-      <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Sync History</Text>
-      <View style={[styles.historyCard, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius, marginHorizontal: 16 }]}>
-        {[
-          { time: "Today 11:45 AM", count: 12, status: "Success" },
-          { time: "Yesterday 06:30 PM", count: 8, status: "Success" },
-          { time: "Jun 20, 10:15 AM", count: 15, status: "Success" },
-          { time: "Jun 19, 04:22 PM", count: 3, status: "Partial" },
-        ].map((item, idx) => (
+      {/* History */}
+      <SectionTitle title="Sync History" />
+      <AppCard style={styles.historyCard} padding={0}>
+        {HISTORY.map((item, i) => (
           <View
-            key={idx}
+            key={i}
             style={[
-              styles.historyRow,
-              {
-                borderBottomColor: colors.border,
-                borderBottomWidth: idx < 3 ? 1 : 0,
-              },
+              styles.histRow,
+              { borderBottomColor: colors.border, borderBottomWidth: i < HISTORY.length - 1 ? 1 : 0 },
             ]}
           >
-            <View style={[styles.histDot, { backgroundColor: item.status === "Success" ? colors.success : colors.warning }]} />
+            <View style={[styles.histDot, { backgroundColor: item.status === "Synced" ? colors.success : colors.warning }]} />
             <View style={{ flex: 1 }}>
               <Text style={[styles.histTime, { color: colors.foreground }]}>{item.time}</Text>
               <Text style={[styles.histCount, { color: colors.mutedForeground }]}>
-                {item.count} records synced
+                {item.count} records
               </Text>
             </View>
-            <View
-              style={[
-                styles.histBadge,
-                {
-                  backgroundColor: item.status === "Success" ? colors.success + "18" : colors.warning + "18",
-                  borderRadius: 6,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.histBadgeText,
-                  { color: item.status === "Success" ? colors.success : colors.warning },
-                ]}
-              >
-                {item.status}
-              </Text>
-            </View>
+            <StatusBadge status={item.status} />
           </View>
         ))}
-      </View>
+      </AppCard>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  heroCard: {
-    padding: 24,
+  hero: {
+    flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
-    elevation: 4,
-    marginBottom: 8,
+    gap: spacing.md,
+    paddingHorizontal: spacing.screenH,
+    paddingVertical: spacing.lg,
+    borderBottomWidth: 1,
   },
-  syncIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  heroIcon: {
+    width: 56,
+    height: 56,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
   },
-  heroTitle: { fontSize: 20, fontFamily: "Inter_700Bold", marginBottom: 6 },
-  heroSub: { fontSize: 13, fontFamily: "Inter_400Regular", textAlign: "center", marginBottom: 20 },
-  progressTrack: { width: "100%", height: 6, marginBottom: 20, overflow: "hidden" },
+  heroText: { flex: 1 },
+  heroTitle: { ...typography.title, marginBottom: 2 },
+  heroSub: { ...typography.caption },
+  progressWrap: {
+    paddingHorizontal: spacing.screenH,
+    paddingVertical: spacing.base,
+    borderBottomWidth: 1,
+  },
+  progressHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: spacing.sm,
+  },
+  progressLabel: { ...typography.bodyMedium },
+  progressPct: { ...typography.title },
+  progressTrack: { height: 6, overflow: "hidden" },
   progressFill: { height: 6 },
-  syncBtn: {
+  stats: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    height: 50,
-    width: "100%",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.screenH,
   },
-  syncBtnText: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
-  sectionTitle: {
-    fontSize: 16,
-    fontFamily: "Inter_700Bold",
-    marginHorizontal: 16,
-    marginTop: 20,
-    marginBottom: 12,
-  },
-  statsRow: { flexDirection: "row", gap: 10, marginHorizontal: 16, marginBottom: 4 },
-  syncStat: {
+  statPill: {
     flex: 1,
-    padding: 14,
     alignItems: "center",
+    padding: spacing.base,
     borderWidth: 1,
-    gap: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    gap: spacing.sm,
   },
-  syncStatIcon: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
-  syncStatValue: { fontSize: 22, fontFamily: "Inter_700Bold" },
-  syncStatLabel: { fontSize: 11, fontFamily: "Inter_400Regular" },
-  historyCard: {
-    borderWidth: 1,
-    overflow: "hidden",
-    marginBottom: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  historyRow: {
+  statIcon: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
+  statValue: { fontSize: 24, fontFamily: "Inter_700Bold", letterSpacing: -0.5 },
+  statLabel: { ...typography.captionMedium },
+  cta: { paddingHorizontal: spacing.screenH, marginTop: spacing.xl },
+  historyCard: { marginHorizontal: spacing.screenH },
+  histRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 14,
-    gap: 12,
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.md,
+    gap: spacing.md,
   },
   histDot: { width: 8, height: 8, borderRadius: 4 },
-  histTime: { fontSize: 13, fontFamily: "Inter_500Medium", marginBottom: 2 },
-  histCount: { fontSize: 11, fontFamily: "Inter_400Regular" },
-  histBadge: { paddingHorizontal: 8, paddingVertical: 3 },
-  histBadgeText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
+  histTime: { ...typography.bodyMedium, marginBottom: 2 },
+  histCount: { ...typography.caption },
 });

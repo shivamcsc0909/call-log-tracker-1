@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import {
   FlatList,
   Pressable,
@@ -16,10 +16,18 @@ import { CallLogCard } from "@/components/CallLogCard";
 import { CallLogSkeleton } from "@/components/SkeletonLoader";
 import { EmptyState } from "@/components/EmptyState";
 import { useColors } from "@/hooks/useColors";
+import spacing, { shadow, typography } from "@/constants/spacing";
 import { useCallLogStore } from "@/store/callLogStore";
 import type { CallLog } from "@/types";
 
-const FILTER_OPTIONS = ["All", "Incoming", "Outgoing", "Missed"] as const;
+const FILTERS = ["All", "Incoming", "Outgoing", "Missed"] as const;
+
+const FILTER_META: Record<string, { color: string; icon: keyof typeof Feather.glyphMap }> = {
+  All: { color: "#6B7280", icon: "list" },
+  Incoming: { color: "#22C55E", icon: "phone-incoming" },
+  Outgoing: { color: "#2563EB", icon: "phone-outgoing" },
+  Missed: { color: "#EF4444", icon: "phone-missed" },
+};
 
 export default function LogsScreen() {
   const colors = useColors();
@@ -36,114 +44,103 @@ export default function LogsScreen() {
     setFilter,
   } = useCallLogStore();
 
-  useEffect(() => {
-    fetchLogs();
-  }, []);
-
-  const renderItem = ({ item }: { item: CallLog }) => <CallLogCard log={item} />;
-
-  const renderEmpty = () => {
-    if (isLoading) return null;
-    return (
-      <EmptyState
-        icon="phone-off"
-        title="No call logs found"
-        description={searchQuery ? `No results for "${searchQuery}"` : "No calls recorded yet. Start making calls to see them here."}
-        actionLabel={searchQuery ? "Clear search" : undefined}
-        onAction={searchQuery ? () => setSearch("") : undefined}
-      />
-    );
-  };
-
-  const renderSkeleton = () => (
-    <View>
-      {Array.from({ length: 8 }).map((_, i) => (
-        <CallLogSkeleton key={i} />
-      ))}
-    </View>
-  );
+  useEffect(() => { fetchLogs(); }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View
-        style={[
-          styles.searchBar,
-          {
-            backgroundColor: colors.muted,
-            borderColor: colors.border,
-            borderRadius: colors.radius,
-            marginHorizontal: 16,
-            marginTop: 12,
-          },
-        ]}
-      >
-        <Feather name="search" size={16} color={colors.mutedForeground} />
-        <TextInput
-          style={[styles.searchInput, { color: colors.foreground }]}
-          placeholder="Search by name or number..."
-          placeholderTextColor={colors.mutedForeground}
-          value={searchQuery}
-          onChangeText={setSearch}
-        />
-        {searchQuery.length > 0 && (
-          <Pressable onPress={() => setSearch("")}>
-            <Feather name="x-circle" size={16} color={colors.mutedForeground} />
-          </Pressable>
-        )}
-      </View>
-
-      <View style={styles.filters}>
-        {FILTER_OPTIONS.map((f) => (
-          <Pressable
-            key={f}
-            onPress={() => {
-              Haptics.selectionAsync();
-              setFilter(f);
-            }}
-            style={[
-              styles.filterChip,
-              {
-                backgroundColor: filterType === f ? colors.primary : colors.muted,
-                borderRadius: 20,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                { color: filterType === f ? colors.primaryForeground : colors.mutedForeground },
-              ]}
-            >
-              {f}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      <View style={styles.meta}>
-        <Text style={[styles.count, { color: colors.mutedForeground }]}>
-          {isLoading ? "Loading..." : `${filteredLogs.length} records`}
-        </Text>
-        <View style={styles.legend}>
-          <View style={[styles.dot, { backgroundColor: colors.success }]} />
-          <Text style={[styles.legendText, { color: colors.mutedForeground }]}>In</Text>
-          <View style={[styles.dot, { backgroundColor: colors.primary }]} />
-          <Text style={[styles.legendText, { color: colors.mutedForeground }]}>Out</Text>
-          <View style={[styles.dot, { backgroundColor: colors.destructive }]} />
-          <Text style={[styles.legendText, { color: colors.mutedForeground }]}>Missed</Text>
+      {/* Search */}
+      <View style={[styles.searchWrap, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <View
+          style={[
+            styles.searchBar,
+            {
+              backgroundColor: colors.input,
+              borderColor: colors.border,
+              borderRadius: 10,
+            },
+          ]}
+        >
+          <Feather name="search" size={16} color={colors.mutedForeground} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.foreground }]}
+            placeholder="Search by name or number…"
+            placeholderTextColor={colors.mutedForeground}
+            value={searchQuery}
+            onChangeText={setSearch}
+          />
+          {searchQuery.length > 0 && (
+            <Pressable onPress={() => setSearch("")} hitSlop={8}>
+              <Feather name="x" size={15} color={colors.mutedForeground} />
+            </Pressable>
+          )}
         </View>
       </View>
 
+      {/* Filters */}
+      <View style={[styles.filterRow, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        {FILTERS.map((f) => {
+          const active = filterType === f;
+          const meta = FILTER_META[f];
+          return (
+            <Pressable
+              key={f}
+              onPress={() => { Haptics.selectionAsync(); setFilter(f); }}
+              style={[
+                styles.chip,
+                {
+                  backgroundColor: active ? meta.color : colors.muted,
+                  borderRadius: 20,
+                },
+              ]}
+            >
+              <Feather name={meta.icon} size={11} color={active ? "#fff" : colors.mutedForeground} />
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: active ? "#fff" : colors.mutedForeground },
+                ]}
+              >
+                {f}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {/* Count */}
+      {!isLoading && (
+        <View style={[styles.countRow, { borderBottomColor: colors.border }]}>
+          <Text style={[styles.countText, { color: colors.mutedForeground }]}>
+            {filteredLogs.length} {filteredLogs.length === 1 ? "record" : "records"}
+            {searchQuery ? ` for "${searchQuery}"` : ""}
+          </Text>
+        </View>
+      )}
+
       {isLoading ? (
-        renderSkeleton()
+        <View style={{ paddingTop: spacing.sm }}>
+          {Array.from({ length: 7 }).map((_, i) => <CallLogSkeleton key={i} />)}
+        </View>
       ) : (
         <FlatList
           data={filteredLogs}
           keyExtractor={(item) => String(item.id)}
-          renderItem={renderItem}
-          ListEmptyComponent={renderEmpty}
+          renderItem={({ item }: { item: CallLog }) => <CallLogCard log={item} />}
+          ListEmptyComponent={
+            <EmptyState
+              icon="phone-off"
+              title="No call logs found"
+              description={
+                searchQuery
+                  ? `No results matching "${searchQuery}". Try a different search.`
+                  : "No calls match the selected filter."
+              }
+              actionLabel={searchQuery ? "Clear search" : undefined}
+              onAction={searchQuery ? () => setSearch("") : undefined}
+            />
+          }
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 100, paddingTop: 4 }}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 100, paddingTop: spacing.xs }}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -151,6 +148,7 @@ export default function LogsScreen() {
               tintColor={colors.primary}
             />
           }
+          ItemSeparatorComponent={() => <View style={{ height: 1 }} />}
         />
       )}
     </View>
@@ -159,43 +157,44 @@ export default function LogsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  searchWrap: {
+    paddingHorizontal: spacing.screenH,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+  },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
     height: 44,
-    borderWidth: 1,
-    gap: 8,
-    marginBottom: 12,
+    paddingHorizontal: spacing.md,
+    borderWidth: 1.5,
+    gap: spacing.sm,
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    ...typography.body,
+    paddingVertical: 0,
   },
-  filters: {
+  filterRow: {
     flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 16,
-    marginBottom: 8,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.screenH,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
   },
-  filterChip: {
-    paddingHorizontal: 14,
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  filterText: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
+  chipText: { ...typography.label, letterSpacing: 0.1 },
+  countRow: {
+    paddingHorizontal: spacing.screenH,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
   },
-  meta: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  count: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  legend: { flexDirection: "row", alignItems: "center", gap: 4 },
-  dot: { width: 6, height: 6, borderRadius: 3 },
-  legendText: { fontSize: 10, fontFamily: "Inter_400Regular", marginRight: 4 },
+  countText: { ...typography.caption },
 });

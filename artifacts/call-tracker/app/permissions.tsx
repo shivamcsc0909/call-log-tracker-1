@@ -1,12 +1,13 @@
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PermissionCard } from "@/components/PermissionCard";
+import { AppButton } from "@/components/ui/AppButton";
 import { useColors } from "@/hooks/useColors";
+import spacing, { shadow, typography } from "@/constants/spacing";
 import { usePermissionStore } from "@/store/permissionStore";
 
 export default function PermissionsScreen() {
@@ -15,102 +16,85 @@ export default function PermissionsScreen() {
   const router = useRouter();
   const { permissions, allGranted, grantPermission } = usePermissionStore();
 
-  const handleContinue = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.replace("/(tabs)");
-  };
-
   const grantedCount = permissions.filter((p) => p.status === "granted").length;
+  const pct = (grantedCount / permissions.length) * 100;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         contentContainerStyle={[
           styles.scroll,
-          { paddingTop: insets.top + 40, paddingBottom: insets.bottom + 24 },
+          { paddingTop: insets.top + spacing.xxl, paddingBottom: insets.bottom + spacing.xl },
         ]}
         showsVerticalScrollIndicator={false}
       >
+        {/* Header */}
         <View style={styles.header}>
           <View
-            style={[
-              styles.iconWrap,
-              { backgroundColor: colors.secondary, borderRadius: colors.radius + 4 },
-            ]}
+            style={[styles.shieldWrap, { backgroundColor: colors.secondary, borderRadius: 16 }]}
           >
-            <Feather name="shield" size={28} color={colors.primary} />
+            <Feather name="shield" size={26} color={colors.primary} />
           </View>
           <Text style={[styles.title, { color: colors.foreground }]}>App Permissions</Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-            Grant the following permissions so CallTrack Pro can monitor and sync your call activity.
-          </Text>
-
-          <View
-            style={[
-              styles.progressBar,
-              { backgroundColor: colors.muted, borderRadius: 4 },
-            ]}
-          >
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  backgroundColor: colors.primary,
-                  borderRadius: 4,
-                  width: `${(grantedCount / permissions.length) * 100}%`,
-                },
-              ]}
-            />
-          </View>
-          <Text style={[styles.progressLabel, { color: colors.mutedForeground }]}>
-            {grantedCount} of {permissions.length} permissions granted
+            CallTrack Pro needs the following permissions to monitor and sync call activity from your device.
           </Text>
         </View>
 
+        {/* Progress */}
+        <View
+          style={[
+            styles.progressCard,
+            shadow.xs,
+            { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 14 },
+          ]}
+        >
+          <View style={styles.progressRow}>
+            <Text style={[styles.progressLabel, { color: colors.foreground }]}>Setup progress</Text>
+            <Text style={[styles.progressPct, { color: colors.primary }]}>
+              {grantedCount}/{permissions.length}
+            </Text>
+          </View>
+          <View style={[styles.track, { backgroundColor: colors.muted, borderRadius: 4 }]}>
+            <View
+              style={[
+                styles.fill,
+                { backgroundColor: colors.primary, borderRadius: 4, width: `${pct}%` },
+              ]}
+            />
+          </View>
+          <Text style={[styles.progressSub, { color: colors.mutedForeground }]}>
+            {allGranted ? "All permissions granted — you're ready to go!" : "Grant all permissions to continue"}
+          </Text>
+        </View>
+
+        {/* Permission Cards */}
         <View style={styles.cards}>
           {permissions.map((p) => (
             <PermissionCard key={p.id} permission={p} onGrant={() => grantPermission(p.id)} />
           ))}
         </View>
 
+        {/* Info */}
         <View
           style={[
             styles.infoBox,
-            {
-              backgroundColor: colors.secondary,
-              borderRadius: colors.radius,
-              borderColor: colors.accent,
-            },
+            { backgroundColor: colors.secondary, borderColor: colors.accent, borderRadius: 12 },
           ]}
         >
-          <Feather name="info" size={14} color={colors.primary} />
-          <Text style={[styles.infoText, { color: colors.accentForeground }]}>
-            These permissions are used only for call tracking within your organization. No data is shared with third parties.
+          <Feather name="lock" size={14} color={colors.primary} style={{ marginTop: 1 }} />
+          <Text style={[styles.infoText, { color: colors.secondaryForeground }]}>
+            Your data is encrypted and only shared with your organization's admin portal. No third parties.
           </Text>
         </View>
 
-        <Pressable
-          onPress={handleContinue}
+        <AppButton
+          label={allGranted ? "Continue to Dashboard" : `Waiting for permissions (${grantedCount}/${permissions.length})`}
+          onPress={() => router.replace("/(tabs)")}
           disabled={!allGranted}
-          style={({ pressed }) => [
-            styles.continueBtn,
-            {
-              backgroundColor: allGranted ? colors.primary : colors.muted,
-              borderRadius: colors.radius,
-              opacity: pressed ? 0.85 : 1,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.continueBtnText,
-              { color: allGranted ? colors.primaryForeground : colors.mutedForeground },
-            ]}
-          >
-            {allGranted ? "Continue to Dashboard" : `Grant All Permissions (${grantedCount}/${permissions.length})`}
-          </Text>
-          {allGranted && <Feather name="arrow-right" size={18} color={colors.primaryForeground} style={{ marginLeft: 8 }} />}
-        </Pressable>
+          size="lg"
+          rightIcon={allGranted ? <Feather name="arrow-right" size={18} color="#fff" /> : undefined}
+        />
       </ScrollView>
     </View>
   );
@@ -118,63 +102,50 @@ export default function PermissionsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { flexGrow: 1, paddingHorizontal: 24 },
-  header: { alignItems: "center", marginBottom: 28 },
-  iconWrap: {
-    width: 64,
-    height: 64,
+  scroll: { flexGrow: 1, paddingHorizontal: spacing.screenH },
+  header: { alignItems: "center", marginBottom: spacing.xl },
+  shieldWrap: {
+    width: 60,
+    height: 60,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
+    marginBottom: spacing.base,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontFamily: "Inter_700Bold",
-    marginBottom: 10,
+    letterSpacing: -0.5,
+    marginBottom: spacing.sm,
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    ...typography.body,
     textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 20,
+    lineHeight: 22,
   },
-  progressBar: {
-    width: "100%",
-    height: 4,
-    marginBottom: 8,
+  progressCard: {
+    padding: spacing.base,
+    borderWidth: 1,
+    marginBottom: spacing.lg,
   },
-  progressFill: {
-    height: 4,
+  progressRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: spacing.sm,
   },
-  progressLabel: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-  },
-  cards: { marginBottom: 20 },
+  progressLabel: { ...typography.bodyMedium },
+  progressPct: { ...typography.title },
+  track: { height: 6, marginBottom: spacing.sm, overflow: "hidden" },
+  fill: { height: 6 },
+  progressSub: { ...typography.caption },
+  cards: { gap: spacing.sm, marginBottom: spacing.lg },
   infoBox: {
     flexDirection: "row",
-    gap: 10,
-    padding: 14,
+    gap: spacing.sm,
+    padding: spacing.md,
     borderWidth: 1,
-    marginBottom: 24,
+    marginBottom: spacing.xl,
     alignItems: "flex-start",
   },
-  infoText: {
-    flex: 1,
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    lineHeight: 18,
-  },
-  continueBtn: {
-    height: 52,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  continueBtnText: {
-    fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-  },
+  infoText: { flex: 1, ...typography.caption, lineHeight: 18 },
 });

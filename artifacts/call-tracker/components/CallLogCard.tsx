@@ -3,7 +3,9 @@ import * as Haptics from "expo-haptics";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useColors } from "@/hooks/useColors";
+import spacing, { typography } from "@/constants/spacing";
 import type { CallLog } from "@/types";
 
 interface CallLogCardProps {
@@ -12,55 +14,40 @@ interface CallLogCardProps {
 }
 
 const TYPE_CONFIG = {
-  Incoming: { icon: "phone-incoming" as const, label: "Incoming" },
-  Outgoing: { icon: "phone-outgoing" as const, label: "Outgoing" },
-  Missed: { icon: "phone-missed" as const, label: "Missed" },
-};
-
-const STATUS_CONFIG = {
-  Synced: { bg: "#D1FAE5", text: "#065F46", dark_bg: "#064E3B", dark_text: "#6EE7B7" },
-  Pending: { bg: "#FEF3C7", text: "#92400E", dark_bg: "#451A03", dark_text: "#FDE68A" },
-  Failed: { bg: "#FEE2E2", text: "#991B1B", dark_bg: "#450A0A", dark_text: "#FCA5A5" },
+  Incoming: { icon: "phone-incoming" as const, color: "#22C55E" },
+  Outgoing: { icon: "phone-outgoing" as const, color: "#2563EB" },
+  Missed: { icon: "phone-missed" as const, color: "#EF4444" },
 };
 
 export function CallLogCard({ log, onPress }: CallLogCardProps) {
   const colors = useColors();
-  const isDark = colors.background === "#0F1117";
-  const typeConfig = TYPE_CONFIG[log.type];
-  const statusConfig = STATUS_CONFIG[log.status];
-
-  const iconColor =
-    log.type === "Missed"
-      ? colors.destructive
-      : log.type === "Incoming"
-        ? colors.success
-        : colors.primary;
+  const tc = TYPE_CONFIG[log.type];
 
   return (
     <Pressable
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        Haptics.selectionAsync();
         onPress?.();
       }}
       style={({ pressed }) => [
         styles.card,
         {
           backgroundColor: colors.card,
-          borderColor: colors.border,
-          borderRadius: colors.radius,
+          borderBottomColor: colors.border,
           opacity: pressed ? 0.85 : 1,
         },
       ]}
     >
-      <View style={[styles.iconContainer, { backgroundColor: iconColor + "18" }]}>
-        <Feather name={typeConfig.icon} size={18} color={iconColor} />
+      <View style={[styles.iconWrap, { backgroundColor: tc.color + "12", borderRadius: 22 }]}>
+        <Feather name={tc.icon} size={16} color={tc.color} />
       </View>
-      <View style={styles.info}>
+
+      <View style={styles.main}>
         <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>
           {log.name ?? log.number}
         </Text>
         {log.name && (
-          <Text style={[styles.number, { color: colors.mutedForeground }]}>
+          <Text style={[styles.number, { color: colors.mutedForeground }]} numberOfLines={1}>
             {log.number}
           </Text>
         )}
@@ -68,26 +55,12 @@ export function CallLogCard({ log, onPress }: CallLogCardProps) {
           {log.date} · {log.time}
         </Text>
       </View>
+
       <View style={styles.right}>
-        <Text style={[styles.duration, { color: colors.foreground }]}>{log.duration}</Text>
-        <View
-          style={[
-            styles.badge,
-            {
-              backgroundColor: isDark ? statusConfig.dark_bg : statusConfig.bg,
-              borderRadius: 6,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.badgeText,
-              { color: isDark ? statusConfig.dark_text : statusConfig.text },
-            ]}
-          >
-            {log.status}
-          </Text>
-        </View>
+        <Text style={[styles.duration, { color: log.type === "Missed" ? colors.destructive : colors.foreground }]}>
+          {log.type === "Missed" ? "Missed" : log.duration}
+        </Text>
+        <StatusBadge status={log.status} />
       </View>
     </Pressable>
   );
@@ -97,55 +70,22 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 14,
-    marginHorizontal: 16,
-    marginVertical: 4,
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
+    paddingHorizontal: spacing.screenH,
+    paddingVertical: 13,
+    borderBottomWidth: 1,
+    gap: spacing.md,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  iconWrap: {
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
+    flexShrink: 0,
   },
-  info: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
-    marginBottom: 2,
-  },
-  number: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    marginBottom: 2,
-  },
-  meta: {
-    fontSize: 11,
-    fontFamily: "Inter_400Regular",
-  },
-  right: {
-    alignItems: "flex-end",
-    gap: 6,
-  },
-  duration: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-  },
-  badge: {
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontFamily: "Inter_600SemiBold",
-  },
+  main: { flex: 1, gap: 2 },
+  name: { ...typography.bodyMedium },
+  number: { ...typography.caption },
+  meta: { ...typography.caption },
+  right: { alignItems: "flex-end", gap: spacing.xs },
+  duration: { ...typography.captionMedium },
 });

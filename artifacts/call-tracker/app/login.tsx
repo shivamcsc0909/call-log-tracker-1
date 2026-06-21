@@ -1,23 +1,22 @@
 import { Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AppButton } from "@/components/ui/AppButton";
+import { AppInput } from "@/components/ui/AppInput";
 import { useColors } from "@/hooks/useColors";
 import { useAuthStore } from "@/store/authStore";
+import spacing, { shadow, typography } from "@/constants/spacing";
 
 export default function LoginScreen() {
   const colors = useColors();
@@ -32,32 +31,23 @@ export default function LoginScreen() {
 
   const validate = () => {
     const e: typeof errors = {};
-    if (!email.trim()) e.email = "Email is required";
-    else if (!email.includes("@")) e.email = "Enter a valid email";
+    if (!email.trim()) e.email = "Email address is required";
+    else if (!email.includes("@")) e.email = "Enter a valid email address";
     if (!password) e.password = "Password is required";
-    else if (password.length < 6) e.password = "Minimum 6 characters";
+    else if (password.length < 6) e.password = "Must be at least 6 characters";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
   const handleLogin = async () => {
     if (!validate()) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       await login(email.trim(), password);
       router.replace("/permissions");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Login failed";
-      Alert.alert("Login Failed", msg);
+      Alert.alert("Authentication Failed", msg);
     }
-  };
-
-  const handleForgotPassword = () => {
-    Alert.alert(
-      "Reset Password",
-      "A reset link will be sent to your registered email address.",
-      [{ text: "OK" }]
-    );
   };
 
   return (
@@ -68,130 +58,107 @@ export default function LoginScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.scroll,
-          { paddingTop: insets.top + 40, paddingBottom: insets.bottom + 24 },
+          { paddingTop: insets.top + spacing.xxxl, paddingBottom: insets.bottom + spacing.xl },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <View
-            style={[
-              styles.logoWrap,
-              { backgroundColor: colors.primary, borderRadius: colors.radius + 4 },
-            ]}
-          >
-            <Feather name="phone-call" size={28} color="#fff" />
+        {/* Brand Section */}
+        <View style={styles.brand}>
+          <View style={[styles.logoMark, { backgroundColor: colors.primary, borderRadius: 18 }, shadow.md]}>
+            <Feather name="phone-call" size={26} color="#fff" />
           </View>
-          <Text style={[styles.appName, { color: colors.foreground }]}>CallTrack Pro</Text>
-          <Text style={[styles.tagline, { color: colors.mutedForeground }]}>
-            Enterprise Call Management
-          </Text>
+          <View style={styles.brandText}>
+            <Text style={[styles.appName, { color: colors.foreground }]}>CallTrack Pro</Text>
+            <Text style={[styles.tagline, { color: colors.mutedForeground }]}>
+              Enterprise Call Management
+            </Text>
+          </View>
         </View>
 
+        {/* Form Card */}
         <View
           style={[
-            styles.card,
+            styles.formCard,
+            shadow.md,
             {
               backgroundColor: colors.card,
               borderColor: colors.border,
-              borderRadius: colors.radius + 4,
+              borderRadius: 18,
             },
           ]}
         >
-          <Text style={[styles.signIn, { color: colors.foreground }]}>Sign in to your account</Text>
-          <Text style={[styles.hint, { color: colors.mutedForeground }]}>
-            Use <Text style={{ color: colors.primary, fontFamily: "Inter_500Medium" }}>demo@company.com</Text> / 123456
-          </Text>
-
-          <View style={styles.fields}>
-            <View>
-              <Text style={[styles.label, { color: colors.mutedForeground }]}>Employee Email</Text>
-              <View
-                style={[
-                  styles.inputRow,
-                  {
-                    backgroundColor: colors.muted,
-                    borderColor: errors.email ? colors.destructive : colors.border,
-                    borderRadius: colors.radius,
-                  },
-                ]}
-              >
-                <Feather name="mail" size={16} color={colors.mutedForeground} style={styles.inputIcon} />
-                <TextInput
-                  style={[styles.input, { color: colors.foreground }]}
-                  placeholder="Enter your email"
-                  placeholderTextColor={colors.mutedForeground}
-                  value={email}
-                  onChangeText={(v) => { setEmail(v); setErrors((e) => ({ ...e, email: undefined })); }}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-              </View>
-              {errors.email && (
-                <Text style={[styles.errorText, { color: colors.destructive }]}>{errors.email}</Text>
-              )}
-            </View>
-
-            <View>
-              <Text style={[styles.label, { color: colors.mutedForeground }]}>Password</Text>
-              <View
-                style={[
-                  styles.inputRow,
-                  {
-                    backgroundColor: colors.muted,
-                    borderColor: errors.password ? colors.destructive : colors.border,
-                    borderRadius: colors.radius,
-                  },
-                ]}
-              >
-                <Feather name="lock" size={16} color={colors.mutedForeground} style={styles.inputIcon} />
-                <TextInput
-                  style={[styles.input, { color: colors.foreground }]}
-                  placeholder="Enter your password"
-                  placeholderTextColor={colors.mutedForeground}
-                  value={password}
-                  onChangeText={(v) => { setPassword(v); setErrors((e) => ({ ...e, password: undefined })); }}
-                  secureTextEntry={!showPassword}
-                />
-                <Pressable onPress={() => setShowPassword((s) => !s)} style={styles.eyeBtn}>
-                  <Feather name={showPassword ? "eye-off" : "eye"} size={16} color={colors.mutedForeground} />
-                </Pressable>
-              </View>
-              {errors.password && (
-                <Text style={[styles.errorText, { color: colors.destructive }]}>{errors.password}</Text>
-              )}
-            </View>
+          <View style={styles.formHeader}>
+            <Text style={[styles.formTitle, { color: colors.foreground }]}>Welcome back</Text>
+            <Text style={[styles.formSub, { color: colors.mutedForeground }]}>
+              Sign in to your account to continue
+            </Text>
           </View>
 
-          <Pressable
-            onPress={handleLogin}
-            disabled={isLoading}
-            style={({ pressed }) => [
-              styles.loginBtn,
-              {
-                backgroundColor: colors.primary,
-                borderRadius: colors.radius,
-                opacity: pressed || isLoading ? 0.8 : 1,
-              },
-            ]}
-          >
-            {isLoading ? (
-              <ActivityIndicator color={colors.primaryForeground} />
-            ) : (
-              <Text style={[styles.loginBtnText, { color: colors.primaryForeground }]}>
-                Sign In
-              </Text>
-            )}
-          </Pressable>
+          <View style={styles.fields}>
+            <AppInput
+              label="Email Address"
+              placeholder="you@company.com"
+              value={email}
+              onChangeText={(v) => { setEmail(v); setErrors((e) => ({ ...e, email: undefined })); }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              error={errors.email}
+              leftIcon={<Feather name="mail" size={16} color={colors.mutedForeground} />}
+            />
+            <AppInput
+              label="Password"
+              placeholder="Enter your password"
+              value={password}
+              onChangeText={(v) => { setPassword(v); setErrors((e) => ({ ...e, password: undefined })); }}
+              secureTextEntry={!showPassword}
+              error={errors.password}
+              leftIcon={<Feather name="lock" size={16} color={colors.mutedForeground} />}
+              rightIcon={
+                <Feather
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={16}
+                  color={colors.mutedForeground}
+                />
+              }
+              onRightIconPress={() => setShowPassword((s) => !s)}
+            />
+          </View>
 
-          <Pressable onPress={handleForgotPassword} style={styles.forgotBtn}>
-            <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot Password?</Text>
-          </Pressable>
+          <View style={styles.forgotRow}>
+            <AppButton
+              label="Forgot password?"
+              variant="ghost"
+              fullWidth={false}
+              size="sm"
+              onPress={() =>
+                Alert.alert(
+                  "Reset Password",
+                  "A reset link will be sent to your registered email.",
+                  [{ text: "OK" }]
+                )
+              }
+            />
+          </View>
+
+          <AppButton
+            label="Sign In"
+            onPress={handleLogin}
+            loading={isLoading}
+            size="lg"
+          />
+
+          <View style={[styles.demoNote, { backgroundColor: colors.secondary, borderRadius: 10 }]}>
+            <Feather name="info" size={13} color={colors.primary} />
+            <Text style={[styles.demoText, { color: colors.secondaryForeground }]}>
+              Demo: demo@company.com · 123456
+            </Text>
+          </View>
         </View>
 
         <Text style={[styles.footer, { color: colors.mutedForeground }]}>
-          CallTrack Pro v1.0.0 · Enterprise Edition
+          CallTrack Pro · Enterprise Edition · v1.0.0
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -201,108 +168,61 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: spacing.screenH,
   },
-  header: {
+  brand: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 32,
+    gap: spacing.md,
+    marginBottom: spacing.xxxl,
+    paddingHorizontal: spacing.xs,
   },
-  logoWrap: {
-    width: 64,
-    height: 64,
+  logoMark: {
+    width: 56,
+    height: 56,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
-    shadowColor: "#4F46E5",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
   },
+  brandText: { flex: 1 },
   appName: {
-    fontSize: 26,
+    fontSize: 22,
     fontFamily: "Inter_700Bold",
-    marginBottom: 6,
     letterSpacing: -0.5,
   },
   tagline: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    ...typography.caption,
+    marginTop: 2,
   },
-  card: {
-    padding: 24,
+  formCard: {
+    padding: spacing.xl,
     borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
-    elevation: 3,
-    marginBottom: 24,
+    marginBottom: spacing.xl,
   },
-  signIn: {
-    fontSize: 20,
+  formHeader: { marginBottom: spacing.xl },
+  formTitle: {
+    fontSize: 24,
     fontFamily: "Inter_700Bold",
-    marginBottom: 6,
+    letterSpacing: -0.5,
+    marginBottom: spacing.xs,
   },
-  hint: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    marginBottom: 24,
+  formSub: { ...typography.body },
+  fields: { gap: spacing.base, marginBottom: spacing.base },
+  forgotRow: {
+    alignItems: "flex-end",
+    marginBottom: spacing.lg,
+    marginTop: -spacing.xs,
   },
-  fields: {
-    gap: 16,
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-    marginBottom: 6,
-    letterSpacing: 0.2,
-  },
-  inputRow: {
+  demoNote: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    height: 48,
-    paddingHorizontal: 12,
+    gap: spacing.sm,
+    padding: spacing.md,
+    marginTop: spacing.base,
   },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
-  },
-  eyeBtn: {
-    padding: 4,
-  },
-  errorText: {
-    fontSize: 11,
-    fontFamily: "Inter_400Regular",
-    marginTop: 4,
-  },
-  loginBtn: {
-    height: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-  },
-  loginBtnText: {
-    fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-  },
-  forgotBtn: {
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  forgotText: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-  },
+  demoText: { ...typography.caption, flex: 1 },
   footer: {
     textAlign: "center",
-    fontSize: 11,
-    fontFamily: "Inter_400Regular",
+    ...typography.caption,
+    marginTop: spacing.lg,
   },
 });

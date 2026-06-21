@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
+import spacing, { shadow, typography } from "@/constants/spacing";
 import type { Permission } from "@/types";
 
 interface PermissionCardProps {
@@ -19,7 +20,7 @@ export function PermissionCard({ permission, onGrant }: PermissionCardProps) {
   const handleGrant = async () => {
     setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 900));
     onGrant();
     setLoading(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -29,10 +30,11 @@ export function PermissionCard({ permission, onGrant }: PermissionCardProps) {
     <View
       style={[
         styles.card,
+        shadow.xs,
         {
           backgroundColor: colors.card,
-          borderColor: isGranted ? colors.success + "50" : colors.border,
-          borderRadius: colors.radius,
+          borderColor: isGranted ? colors.success + "60" : colors.border,
+          borderRadius: 14,
         },
       ]}
     >
@@ -40,26 +42,28 @@ export function PermissionCard({ permission, onGrant }: PermissionCardProps) {
         style={[
           styles.iconWrap,
           {
-            backgroundColor: isGranted ? colors.success + "18" : colors.primary + "14",
-            borderRadius: colors.radius,
+            backgroundColor: isGranted ? colors.successMuted : colors.secondary,
+            borderRadius: 12,
           },
         ]}
       >
         <Feather
           name={permission.icon as keyof typeof Feather.glyphMap}
-          size={22}
-          color={isGranted ? colors.success : colors.primary}
+          size={20}
+          color={isGranted ? colors.successForeground : colors.primary}
         />
       </View>
+
       <View style={styles.content}>
         <Text style={[styles.title, { color: colors.foreground }]}>{permission.title}</Text>
         <Text style={[styles.desc, { color: colors.mutedForeground }]} numberOfLines={2}>
           {permission.description}
         </Text>
       </View>
+
       {isGranted ? (
-        <View style={[styles.grantedBadge, { backgroundColor: colors.success + "18", borderRadius: 8 }]}>
-          <Feather name="check" size={14} color={colors.success} />
+        <View style={[styles.grantedBadge, { backgroundColor: colors.successMuted, borderRadius: 10 }]}>
+          <Feather name="check" size={14} color={colors.successForeground} />
         </View>
       ) : (
         <Pressable
@@ -75,9 +79,9 @@ export function PermissionCard({ permission, onGrant }: PermissionCardProps) {
           ]}
         >
           {loading ? (
-            <ActivityIndicator size="small" color={colors.primaryForeground} />
+            <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={[styles.grantText, { color: colors.primaryForeground }]}>Grant</Text>
+            <Text style={styles.grantText}>Grant</Text>
           )}
         </Pressable>
       )}
@@ -89,50 +93,40 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    marginBottom: 12,
+    padding: spacing.base,
     borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-    gap: 14,
+    gap: spacing.md,
   },
   iconWrap: {
     width: 48,
     height: 48,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
-  content: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
-    marginBottom: 4,
-  },
-  desc: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    lineHeight: 17,
-  },
+  content: { flex: 1 },
+  title: { ...typography.bodyMedium, marginBottom: 3 },
+  desc: { ...typography.caption, lineHeight: 17 },
   grantedBadge: {
     width: 34,
     height: 34,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
   grantBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 60,
+    minWidth: 62,
+    minHeight: 34,
+    flexShrink: 0,
   },
   grantText: {
-    fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
+    color: "#fff",
+    ...typography.captionMedium,
+    letterSpacing: 0,
+    fontSize: 13,
   },
 });

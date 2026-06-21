@@ -1,8 +1,10 @@
 import { Feather } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
+import { AppButton } from "@/components/ui/AppButton";
 import { useColors } from "@/hooks/useColors";
+import spacing, { typography } from "@/constants/spacing";
 
 interface EmptyStateProps {
   icon: keyof typeof Feather.glyphMap;
@@ -17,27 +19,19 @@ export function EmptyState({ icon, title, description, actionLabel, onAction }: 
 
   return (
     <View style={styles.container}>
-      <View style={[styles.iconWrap, { backgroundColor: colors.muted, borderRadius: colors.radius }]}>
-        <Feather name={icon} size={28} color={colors.mutedForeground} />
+      <View style={[styles.iconWrap, { backgroundColor: colors.muted, borderRadius: 20 }]}>
+        <Feather name={icon} size={26} color={colors.mutedForeground} />
       </View>
       <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
       <Text style={[styles.desc, { color: colors.mutedForeground }]}>{description}</Text>
       {actionLabel && onAction && (
-        <Pressable
+        <AppButton
+          label={actionLabel}
           onPress={onAction}
-          style={({ pressed }) => [
-            styles.button,
-            {
-              backgroundColor: colors.primary,
-              borderRadius: colors.radius,
-              opacity: pressed ? 0.8 : 1,
-            },
-          ]}
-        >
-          <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>
-            {actionLabel}
-          </Text>
-        </Pressable>
+          variant="secondary"
+          size="md"
+          fullWidth={false}
+        />
       )}
     </View>
   );
@@ -45,38 +39,27 @@ export function EmptyState({ icon, title, description, actionLabel, onAction }: 
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 40,
-    paddingVertical: 60,
+    paddingHorizontal: spacing.xxxl,
+    paddingVertical: spacing.xxxl + spacing.xl,
   },
   iconWrap: {
     width: 64,
     height: 64,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
+    marginBottom: spacing.base,
   },
   title: {
-    fontSize: 17,
-    fontFamily: "Inter_600SemiBold",
-    marginBottom: 8,
+    ...typography.title,
     textAlign: "center",
+    marginBottom: spacing.sm,
   },
   desc: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    ...typography.body,
     textAlign: "center",
-    lineHeight: 19,
-    marginBottom: 20,
-  },
-  button: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  buttonText: {
-    fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
+    lineHeight: 22,
+    marginBottom: spacing.lg,
   },
 });

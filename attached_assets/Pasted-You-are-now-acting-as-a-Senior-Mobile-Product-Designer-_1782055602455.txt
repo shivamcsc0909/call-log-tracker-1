@@ -1,0 +1,244 @@
+You are now acting as a Senior Mobile Product Designer, UI/UX Auditor, and React Native Design System Architect.
+
+DO NOT rebuild the app.
+
+DO NOT change business logic.
+
+DO NOT change navigation.
+
+DO NOT modify API integrations.
+
+Your task is ONLY to audit and redesign the existing UI to make it production-ready and client-demo ready.
+
+Current app looks like an AI-generated prototype.
+
+Problems observed:
+
+* Poor spacing
+* Inconsistent margins and paddings
+* Weak typography hierarchy
+* Bad alignment
+* Generic colors
+* Poor visual hierarchy
+* Dashboard cards look basic
+* Login screen looks like a demo project
+* Components do not feel premium
+* Overall UI is not suitable for client presentation
+
+---
+
+## DESIGN GOAL
+
+Transform the app into a premium enterprise SaaS mobile application.
+
+Design quality should feel similar to:
+
+* Linear
+* Stripe Dashboard
+* Notion Mobile
+* Ramp
+* Brex
+* Modern CRM Applications
+
+The client should immediately feel:
+
+"this is a professional product"
+
+---
+
+## SPACING SYSTEM
+
+Implement consistent spacing scale:
+
+4
+8
+12
+16
+20
+24
+32
+40
+
+Remove random paddings and margins.
+
+All screens must use consistent horizontal padding.
+
+Cards must align perfectly.
+
+---
+
+## TYPOGRAPHY SYSTEM
+
+Create typography hierarchy:
+
+Display
+Heading
+Subheading
+Body
+Caption
+
+Use proper font weights.
+
+Avoid plain default text.
+
+Text should look premium and readable.
+
+---
+
+## COLOR SYSTEM
+
+Create professional enterprise palette.
+
+Primary:
+#2563EB
+
+Secondary:
+#0F172A
+
+Background:
+#F8FAFC
+
+Surface:
+#FFFFFF
+
+Success:
+#22C55E
+
+Warning:
+#F59E0B
+
+Error:
+#EF4444
+
+Text Primary:
+#111827
+
+Text Secondary:
+#6B7280
+
+Avoid random bright colors.
+
+Avoid childish gradients.
+
+Use minimal premium colors.
+
+---
+
+## CARD DESIGN
+
+Dashboard cards should look premium.
+
+Requirements:
+
+* Rounded corners
+* Soft shadows
+* Proper spacing
+* Better statistics layout
+* Better icon placement
+* Modern metric card design
+
+Cards should look similar to modern analytics dashboards.
+
+---
+
+## LOGIN SCREEN
+
+Redesign completely.
+
+Requirements:
+
+* Professional branding section
+* Better form layout
+* Proper input spacing
+* Premium login button
+* Better visual balance
+
+Should look like a real company application.
+
+---
+
+## DASHBOARD SCREEN
+
+Redesign layout.
+
+Requirements:
+
+* Better statistics cards
+* Proper grid system
+* Better section spacing
+* Quick actions should look modern
+* Sync status should be visually attractive
+
+---
+
+## CALL LOG SCREEN
+
+Improve:
+
+* Search bar design
+* List item spacing
+* Card layout
+* Status badges
+* Typography hierarchy
+
+Should look like a professional CRM screen.
+
+---
+
+## PROFILE SCREEN
+
+Improve:
+
+* Avatar section
+* User information cards
+* Settings list items
+* Logout button
+
+---
+
+## DESIGN SYSTEM
+
+Create reusable:
+
+AppButton
+AppCard
+AppInput
+AppHeader
+SectionTitle
+StatusBadge
+MetricCard
+
+Use them everywhere.
+
+Remove duplicated styling.
+
+---
+
+## ANIMATION
+
+Add subtle animations only:
+
+* Screen fade in
+* Card appearance
+* Button press feedback
+
+Do NOT overuse animations.
+
+---
+
+## FINAL OBJECTIVE
+
+When a client sees screenshots of this app, it should feel:
+
+* Professionally designed
+* Production ready
+* Enterprise grade
+* Clean
+* Modern
+* Trustworthy
+
+Audit every screen one by one.
+
+Improve UI quality significantly.
+
+Return all updated files with improved styles and reusable design system implementation.

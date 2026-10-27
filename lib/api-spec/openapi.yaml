@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: logs
+    description: Logs operations
 paths:
   /healthz:
     get:
@@ -24,7 +28,75 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /banner/auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      description: Authenticate user using email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login response containing user data and organizations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+
+  /banner/auth/select-organization:
+    post:
+      operationId: selectOrganization
+      tags: [auth]
+      summary: Select Organization
+      description: Choose organization and receive JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SelectOrganizationRequest"
+      responses:
+        "200":
+          description: JWT token and user info for selected organization
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SelectOrganizationResponse"
+
+  /logs/call:
+    post:
+      operationId: insertCallLogs
+      tags: [logs]
+      summary: Insert Call Logs
+      description: Upload call logs to the server
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsertCallLogsRequest"
+      responses:
+        "200":
+          description: Logs successfully uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsertCallLogsResponse"
+
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +105,143 @@ components:
           type: string
       required:
         - status
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - name
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            userId:
+              type: string
+            email:
+              type: string
+            firstName:
+              type: string
+            lastName:
+              type: string
+            organizations:
+              type: array
+              items:
+                $ref: "#/components/schemas/Organization"
+          required:
+            - userId
+            - email
+            - firstName
+            - lastName
+            - organizations
+      required:
+        - success
+        - message
+        - data
+
+    SelectOrganizationRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+        orgId:
+          type: string
+      required:
+        - userId
+        - orgId
+
+    SelectOrganizationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        token:
+          type: string
+        user:
+          type: object
+          additionalProperties: true
+        organization:
+          type: object
+          additionalProperties: true
+        isAdmin:
+          type: boolean
+        permissions:
+          type: array
+          items:
+            type: string
+        subscriptions:
+          type: array
+          items:
+            type: string
+      required:
+        - success
+        - token
+        - user
+        - organization
+        - isAdmin
+        - permissions
+        - subscriptions
+
+    CallLogInput:
+      type: object
+      properties:
+        number:
+          type: string
+        name:
+          type: string
+        duration:
+          type: integer
+        timestamp:
+          type: string
+        type:
+          type: string
+      required:
+        - number
+        - duration
+        - timestamp
+        - type
+
+    InsertCallLogsRequest:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: "#/components/schemas/CallLogInput"
+      required:
+        - logs
+
+    InsertCallLogsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
 

@@ -7,6 +7,8 @@ import type { Permission } from "@/types";
 interface PermissionState {
   permissions: Permission[];
   allGranted: boolean;
+  hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
   grantPermission: (id: string) => void;
   denyPermission: (id: string) => void;
   reset: () => void;
@@ -34,6 +36,8 @@ export const usePermissionStore = create<PermissionState>()(
     (set, get) => ({
       permissions: DEFAULT_PERMISSIONS,
       allGranted: false,
+      hasHydrated: false,
+      setHasHydrated: (state) => set({ hasHydrated: state }),
 
       grantPermission: (id) => {
         const perms = get().permissions.map((p) =>
@@ -61,6 +65,20 @@ export const usePermissionStore = create<PermissionState>()(
     {
       name: "permission-storage",
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        permissions: state.permissions,
+        allGranted: state.allGranted,
+      }),
+      onRehydrateStorage: (state) => {
+        return (state, error) => {
+          if (error) {
+            console.error("[Permissions Loaded] Error hydrating permission store:", error);
+          } else {
+            console.log(`[Permissions Loaded] Permission store hydrated. All granted: ${state?.allGranted}`);
+          }
+          state?.setHasHydrated(true);
+        };
+      },
     }
   )
 );

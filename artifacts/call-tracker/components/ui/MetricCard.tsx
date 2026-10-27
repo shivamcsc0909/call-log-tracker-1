@@ -31,36 +31,38 @@ export function MetricCard({
     <View
       style={[
         styles.card,
-        shadow.sm,
+        shadow.xs,
         {
           backgroundColor: colors.card,
           borderColor: colors.border,
-          borderRadius: 14,
+          borderRadius: 12,
         },
       ]}
     >
       <View style={styles.top}>
-        <View style={[styles.iconWrap, { backgroundColor: color + "12", borderRadius: 10 }]}>
-          <Feather name={icon} size={16} color={color} />
+        <View style={[styles.iconWrap, { backgroundColor: `${color}0A`, borderRadius: 8, borderWidth: 1, borderColor: `${color}1A` }]}>
+          <Feather name={icon} size={14} color={color} />
         </View>
         {trend && (
-          <View style={[styles.trendBadge, { backgroundColor: trendUp ? colors.successMuted : "#FEE2E2", borderRadius: 6 }]}>
+          <View style={[styles.trendBadge, { backgroundColor: trendUp ? `${colors.success}0A` : `${colors.destructive}0A`, borderColor: trendUp ? `${colors.success}1A` : `${colors.destructive}1A`, borderRadius: 100 }]}>
             <Feather
-              name={trendUp ? "trending-up" : "trending-down"}
+              name={trendUp ? "arrow-up-right" : "arrow-down-left"}
               size={10}
-              color={trendUp ? colors.successForeground : "#991B1B"}
+              color={trendUp ? colors.success : colors.destructive}
             />
-            <Text style={[styles.trendText, { color: trendUp ? colors.successForeground : "#991B1B" }]}>
+            <Text style={[styles.trendText, { color: trendUp ? colors.success : colors.destructive }]}>
               {trend}
             </Text>
           </View>
         )}
       </View>
-      <Text style={[styles.value, { color: colors.foreground }]}>{value}</Text>
-      <Text style={[styles.label, { color: colors.mutedForeground }]}>{label}</Text>
-      {subtitle && (
-        <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{subtitle}</Text>
-      )}
+      <View style={styles.content}>
+        <Text style={[styles.label, { color: colors.mutedForeground }]}>{label}</Text>
+        <Text style={[styles.value, { color: colors.foreground }]}>{value}</Text>
+        {subtitle && (
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{subtitle}</Text>
+        )}
+      </View>
     </View>
   );
 }
@@ -76,12 +78,12 @@ const styles = StyleSheet.create({
   top: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
     marginBottom: 12,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
+    width: 28,
+    height: 28,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -89,25 +91,33 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 6,
-    paddingVertical: 3,
-    gap: 3,
+    paddingVertical: 2,
+    gap: 2,
+    borderWidth: 1,
   },
   trendText: {
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: "Inter_600SemiBold",
   },
+  content: {
+    marginTop: 2,
+  },
   value: {
-    fontSize: 26,
-    fontFamily: "Inter_700Bold",
-    letterSpacing: -0.8,
-    marginBottom: 2,
+    ...typography.cardValue,
+    fontSize: 28,
+    fontWeight: "700",
+    letterSpacing: -0.5,
+    marginTop: 2,
   },
   label: {
     ...typography.captionMedium,
+    fontWeight: "500",
     letterSpacing: 0,
+    fontSize: 12,
   },
   subtitle: {
     ...typography.caption,
+    fontSize: 10,
     marginTop: 2,
   },
 });

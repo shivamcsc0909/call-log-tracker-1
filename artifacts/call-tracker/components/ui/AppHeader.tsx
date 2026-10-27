@@ -24,7 +24,7 @@ export function AppHeader({ title, subtitle, showBack = false, rightSlot }: AppH
       style={[
         styles.container,
         {
-          paddingTop: insets.top + 12,
+          paddingTop: insets.top + 10,
           backgroundColor: colors.card,
           borderBottomColor: colors.border,
         },
@@ -34,10 +34,19 @@ export function AppHeader({ title, subtitle, showBack = false, rightSlot }: AppH
         {showBack && (
           <Pressable
             onPress={() => router.back()}
-            style={[styles.backBtn, { backgroundColor: colors.muted, borderRadius: 10 }]}
-            hitSlop={8}
+            style={({ pressed }) => [
+              styles.backBtn,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                borderWidth: 1,
+                borderRadius: 8,
+                opacity: pressed ? 0.7 : 1,
+              },
+            ]}
+            hitSlop={12}
           >
-            <Feather name="arrow-left" size={18} color={colors.foreground} />
+            <Feather name="arrow-left" size={15} color={colors.foreground} />
           </Pressable>
         )}
         <View style={styles.titles}>
@@ -55,7 +64,7 @@ export function AppHeader({ title, subtitle, showBack = false, rightSlot }: AppH
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    paddingBottom: 14,
+    paddingBottom: 12,
     borderBottomWidth: 1,
   },
   row: {
@@ -64,12 +73,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   backBtn: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
   },
   titles: { flex: 1 },
-  title: { ...typography.title },
+  title: { ...typography.title, fontWeight: "700" },
   subtitle: { ...typography.caption, marginTop: 1 },
 });

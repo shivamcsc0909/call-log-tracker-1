@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { reloadAppAsync } from "expo";
-import React, { useState } from "react";
+import * as SplashScreen from "expo-splash-screen";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   Platform,
@@ -24,6 +25,12 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
   const insets = useSafeAreaInsets();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
+
+  useEffect(() => {
+    SplashScreen.hideAsync().catch((err) => {
+      console.warn("Failed to hide splash screen in error fallback:", err);
+    });
+  }, []);
 
   const handleRestart = async () => {
     try {

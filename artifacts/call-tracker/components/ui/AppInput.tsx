@@ -34,20 +34,34 @@ export function AppInput({
   return (
     <View style={styles.wrapper}>
       {label && (
-        <Text style={[styles.label, { color: colors.mutedForeground }]}>{label}</Text>
+        <Text style={[styles.label, { color: colors.foreground }]}>{label}</Text>
       )}
       <View
         style={[
           styles.container,
           {
-            backgroundColor: colors.input,
+            backgroundColor: colors.card,
             borderColor: error
               ? colors.destructive
               : focused
                 ? colors.primary
                 : colors.border,
-            borderRadius: 10,
+            borderRadius: 6,
           },
+          focused && {
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.08,
+            shadowRadius: 3,
+            elevation: 1,
+          },
+          !focused && {
+            shadowColor: "#000000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.02,
+            shadowRadius: 2,
+            elevation: 0.5,
+          }
         ]}
       >
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
@@ -55,7 +69,7 @@ export function AppInput({
           style={[
             styles.input,
             { color: colors.foreground },
-            !leftIcon && { paddingLeft: 14 },
+            !leftIcon && { paddingLeft: 12 },
             style,
           ]}
           placeholderTextColor={colors.mutedForeground}
@@ -84,30 +98,31 @@ const styles = StyleSheet.create({
   wrapper: { gap: 6 },
   label: {
     ...typography.captionMedium,
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
+    fontWeight: "600",
+    letterSpacing: -0.1,
+    fontSize: 12,
   },
   container: {
     flexDirection: "row",
     alignItems: "center",
-    height: 50,
-    borderWidth: 1.5,
+    height: 42,
+    borderWidth: 1,
   },
   leftIcon: {
-    paddingLeft: 14,
-    paddingRight: 10,
+    paddingLeft: 12,
+    paddingRight: 8,
     alignItems: "center",
     justifyContent: "center",
   },
   rightIcon: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     alignItems: "center",
     justifyContent: "center",
   },
   input: {
     flex: 1,
     ...typography.body,
-    paddingRight: 14,
+    paddingRight: 12,
   },
   error: {
     ...typography.caption,

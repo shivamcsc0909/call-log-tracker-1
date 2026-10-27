@@ -11,10 +11,11 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { MetricCard } from "@/components/ui/MetricCard";
-import { SectionTitle } from "@/components/ui/SectionTitle";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { AppCard } from "@/components/ui/AppCard";
 import { StatSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
@@ -47,13 +48,13 @@ function QuickActionTile({
         {
           backgroundColor: colors.card,
           borderColor: colors.border,
-          borderRadius: 14,
-          opacity: pressed ? 0.8 : 1,
+          borderRadius: 12,
+          opacity: pressed ? 0.9 : 1,
         },
       ]}
     >
-      <View style={[styles.tileIcon, { backgroundColor: colors.secondary, borderRadius: 10 }]}>
-        <Feather name={icon} size={18} color={colors.primary} />
+      <View style={[styles.tileIcon, { backgroundColor: `${colors.primary}0A`, borderColor: `${colors.primary}1A`, borderWidth: 1, borderRadius: 8 }]}>
+        <Feather name={icon} size={14} color={colors.primary} />
       </View>
       <Text style={[styles.tileLabel, { color: colors.foreground }]}>{label}</Text>
       {badge && (
@@ -66,6 +67,7 @@ function QuickActionTile({
 }
 
 export default function DashboardScreen() {
+  console.log("[DASHBOARD_RENDERED]");
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -74,11 +76,20 @@ export default function DashboardScreen() {
   const { fetchStatus, syncNow, isSyncing, lastSyncTime, pendingCount } = useSyncStore();
 
   useEffect(() => {
+    console.log("[DASHBOARD SCREEN LOADED]");
     fetchStats();
     fetchStatus();
   }, []);
 
-  const firstName = user?.name.split(" ")[0] ?? "User";
+  const firstName = user?.name ? user.name.split(" ")[0] : "Employee";
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "US";
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
@@ -113,11 +124,23 @@ export default function DashboardScreen() {
         ]}
       >
         <View style={styles.topBarLeft}>
-          <Text style={[styles.greetingText, { color: colors.mutedForeground }]}>{greeting}</Text>
-          <Text style={[styles.nameText, { color: colors.foreground }]}>{firstName}</Text>
+          <View style={[styles.avatarOutline, { borderColor: colors.border }]}>
+            <LinearGradient
+              colors={["#2563EB", "#1D4ED8"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.avatar}
+            >
+              <Text style={styles.avatarText}>{initials}</Text>
+            </LinearGradient>
+          </View>
+          <View style={styles.greetingWrap}>
+            <Text style={[styles.greetingText, { color: colors.mutedForeground }]}>{greeting},</Text>
+            <Text style={[styles.nameText, { color: colors.foreground }]}>{user?.name ?? firstName}</Text>
+          </View>
         </View>
         <View style={styles.topBarRight}>
-          <StatusBadge status={stats?.syncStatus ?? "Pending"} size="md" />
+          <StatusChip status={stats?.syncStatus ?? "Synced"} size="sm" />
         </View>
       </View>
 
@@ -128,34 +151,34 @@ export default function DashboardScreen() {
           style={[
             styles.syncBanner,
             {
-              backgroundColor: pendingCount > 0 ? colors.warningMuted : colors.successMuted,
-              borderColor: pendingCount > 0 ? colors.warning + "40" : colors.success + "40",
+              backgroundColor: pendingCount > 0 ? `${colors.warning}08` : `${colors.success}08`,
+              borderColor: pendingCount > 0 ? `${colors.warning}1A` : `${colors.success}1A`,
             },
           ]}
         >
           <Feather
             name={pendingCount > 0 ? "upload-cloud" : "check-circle"}
-            size={14}
-            color={pendingCount > 0 ? colors.warningForeground : colors.successForeground}
+            size={13}
+            color={pendingCount > 0 ? colors.warning : colors.success}
           />
           <Text
             style={[
               styles.syncBannerText,
-              { color: pendingCount > 0 ? colors.warningForeground : colors.successForeground },
+              { color: pendingCount > 0 ? colors.warning : colors.success },
             ]}
           >
             {pendingCount > 0
-              ? `${pendingCount} records pending sync — Tap to sync now`
-              : `All synced · ${lastSyncTime}`}
+              ? `${pendingCount} call records ready to sync. Tap to synchronize.`
+              : `All systems synchronized · ${lastSyncTime}`}
           </Text>
           {pendingCount > 0 && (
-            <Feather name="chevron-right" size={13} color={colors.warningForeground} />
+            <Feather name="chevron-right" size={13} color={colors.warning} />
           )}
         </Pressable>
       )}
 
       {/* Metrics */}
-      <SectionTitle title="Overview" />
+      <SectionHeader title="Performance Overview" />
       {isLoading ? (
         <View style={styles.metrics}>
           <StatSkeleton />
@@ -173,7 +196,7 @@ export default function DashboardScreen() {
               trendUp
             />
             <MetricCard
-              label="Weekly Calls"
+              label="Weekly Logs"
               value={stats?.weeklyCalls ?? 0}
               icon="bar-chart-2"
               iconColor="#7C3AED"
@@ -183,14 +206,14 @@ export default function DashboardScreen() {
           </View>
           <View style={[styles.metrics, { marginTop: spacing.sm }]}>
             <MetricCard
-              label="Talk Time"
+              label="Talk Duration"
               value={stats?.totalDuration ?? "—"}
               icon="clock"
               iconColor="#0891B2"
-              subtitle="this week"
+              subtitle="this active week"
             />
             <MetricCard
-              label="Sync Rate"
+              label="Sync Efficiency"
               value="96.8%"
               icon="refresh-cw"
               iconColor={colors.success}
@@ -202,37 +225,37 @@ export default function DashboardScreen() {
       )}
 
       {/* Quick Actions */}
-      <SectionTitle title="Quick Actions" />
+      <SectionHeader title="Quick Operations" />
       <View style={styles.tiles}>
         <QuickActionTile
           icon="phone"
-          label="Call Logs"
+          label="Call Registry"
           onPress={() => router.push("/(tabs)/logs")}
         />
         <QuickActionTile
           icon="upload-cloud"
-          label="Sync Now"
+          label="Force Sync"
           onPress={handleSyncNow}
           badge={pendingCount > 0 ? String(pendingCount) : undefined}
         />
         <QuickActionTile
           icon="refresh-cw"
-          label="Refresh"
+          label="Refresh Stats"
           onPress={() => { refresh(); fetchStatus(); }}
         />
       </View>
 
       {/* Call Breakdown */}
-      <SectionTitle
-        title="Call Breakdown"
-        actionLabel="View all"
+      <SectionHeader
+        title="Volume Breakdown"
+        actionLabel="View Registry"
         onAction={() => router.push("/(tabs)/logs")}
       />
-      <AppCard style={styles.breakdownCard}>
+      <AppCard style={styles.breakdownCard} padding={0} shadowLevel="xs">
         {[
-          { icon: "phone-incoming" as const, label: "Incoming", value: 74, color: colors.success },
-          { icon: "phone-outgoing" as const, label: "Outgoing", value: 38, color: colors.primary },
-          { icon: "phone-missed" as const, label: "Missed", value: 14, color: colors.destructive },
+          { icon: "phone-incoming" as const, label: "Incoming Calls", value: 74, color: colors.success },
+          { icon: "phone-outgoing" as const, label: "Outgoing Calls", value: 38, color: colors.primary },
+          { icon: "phone-missed" as const, label: "Missed Calls", value: 14, color: colors.destructive },
         ].map((item, i, arr) => (
           <View
             key={item.label}
@@ -241,32 +264,36 @@ export default function DashboardScreen() {
               { borderBottomColor: colors.border, borderBottomWidth: i < arr.length - 1 ? 1 : 0 },
             ]}
           >
-            <View style={[styles.breakdownIcon, { backgroundColor: item.color + "12", borderRadius: 8 }]}>
-              <Feather name={item.icon} size={14} color={item.color} />
+            <View style={[styles.breakdownIcon, { backgroundColor: `${item.color}0A`, borderRadius: 8 }]}>
+              <Feather name={item.icon} size={13} color={item.color} />
             </View>
-            <Text style={[styles.breakdownLabel, { color: colors.mutedForeground }]}>
-              {item.label}
-            </Text>
-            <View style={styles.breakdownBar}>
-              <View
-                style={[
-                  styles.barFill,
-                  {
-                    backgroundColor: item.color + "30",
-                    width: `${(item.value / 126) * 100}%`,
-                    borderRadius: 4,
-                  },
-                ]}
-              >
+            <View style={styles.breakdownDetails}>
+              <View style={styles.breakdownTextRow}>
+                <Text style={[styles.breakdownLabel, { color: colors.foreground }]}>
+                  {item.label}
+                </Text>
+                <Text style={[styles.breakdownValue, { color: colors.foreground }]}>{item.value}</Text>
+              </View>
+              <View style={styles.breakdownBar}>
                 <View
                   style={[
-                    styles.barInner,
-                    { backgroundColor: item.color, borderRadius: 4, width: "100%" },
+                    styles.barFill,
+                    {
+                      backgroundColor: `${colors.border}`,
+                      width: "100%",
+                      borderRadius: 100,
+                    },
                   ]}
-                />
+                >
+                  <View
+                    style={[
+                      styles.barInner,
+                      { backgroundColor: item.color, borderRadius: 100, width: `${(item.value / 126) * 100}%` },
+                    ]}
+                  />
+                </View>
               </View>
             </View>
-            <Text style={[styles.breakdownValue, { color: colors.foreground }]}>{item.value}</Text>
           </View>
         ))}
       </AppCard>
@@ -284,10 +311,45 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.base,
     borderBottomWidth: 1,
   },
-  topBarLeft: {},
+  topBarLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  avatarOutline: {
+    borderWidth: 1,
+    padding: 3,
+    borderRadius: 100,
+    backgroundColor: "#FFFFFF",
+  },
+  avatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: {
+    color: "#fff",
+    fontSize: 12,
+    fontFamily: "Inter_700Bold",
+    letterSpacing: -0.2,
+  },
+  greetingWrap: {
+    justifyContent: "center",
+  },
   topBarRight: {},
-  greetingText: { ...typography.caption, marginBottom: 2 },
-  nameText: { fontSize: 22, fontFamily: "Inter_700Bold", letterSpacing: -0.4 },
+  greetingText: {
+    ...typography.caption,
+    fontSize: 10,
+    lineHeight: 12,
+    fontWeight: "500",
+  },
+  nameText: {
+    fontSize: 15,
+    fontFamily: "Inter_700Bold",
+    letterSpacing: -0.3,
+  },
   syncBanner: {
     flexDirection: "row",
     alignItems: "center",
@@ -296,10 +358,10 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
   },
-  syncBannerText: { flex: 1, ...typography.captionMedium },
+  syncBannerText: { flex: 1, ...typography.captionMedium, fontSize: 11 },
   metrics: { flexDirection: "row", gap: spacing.sm, paddingHorizontal: spacing.screenH },
   tiles: {
     flexDirection: "row",
@@ -312,36 +374,56 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     gap: spacing.sm,
-    minHeight: 86,
+    minHeight: 80,
     justifyContent: "center",
     position: "relative",
   },
-  tileIcon: { width: 38, height: 38, alignItems: "center", justifyContent: "center" },
-  tileLabel: { ...typography.captionMedium, textAlign: "center" },
-  tileBadge: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
+  tileIcon: {
+    width: 28,
+    height: 28,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 4,
   },
-  tileBadgeText: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#fff" },
-  breakdownCard: { marginHorizontal: spacing.screenH, padding: 0, overflow: "hidden" },
+  tileLabel: { ...typography.captionMedium, fontWeight: "600", fontSize: 11, textAlign: "center", letterSpacing: -0.1 },
+  tileBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    minWidth: 14,
+    height: 14,
+    borderRadius: 100,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
+  },
+  tileBadgeText: { fontSize: 8, fontFamily: "Inter_700Bold", color: "#fff" },
+  breakdownCard: { marginHorizontal: spacing.screenH, borderWidth: 1, borderRadius: 12 },
   breakdownRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: spacing.base,
-    paddingVertical: 14,
+    paddingVertical: 12,
     gap: spacing.md,
   },
-  breakdownIcon: { width: 30, height: 30, alignItems: "center", justifyContent: "center" },
-  breakdownLabel: { ...typography.bodyMedium, width: 68 },
-  breakdownBar: { flex: 1, height: 6, borderRadius: 4, overflow: "hidden" },
-  barFill: { height: 6 },
-  barInner: { height: 6 },
-  breakdownValue: { ...typography.title, width: 28, textAlign: "right" },
+  breakdownIcon: {
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  breakdownDetails: {
+    flex: 1,
+    gap: 4,
+  },
+  breakdownTextRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  breakdownLabel: { ...typography.captionMedium, fontWeight: "600", fontSize: 12, letterSpacing: -0.1 },
+  breakdownBar: { height: 3, borderRadius: 100, overflow: "hidden", marginTop: 2 },
+  barFill: { height: 3 },
+  barInner: { height: 3 },
+  breakdownValue: { ...typography.captionMedium, fontWeight: "700", fontSize: 12 },
 });

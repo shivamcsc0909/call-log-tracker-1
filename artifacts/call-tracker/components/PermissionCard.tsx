@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import { useColors } from "@/hooks/useColors";
 import spacing, { shadow, typography } from "@/constants/spacing";
 import type { Permission } from "@/types";
+import { AppCard } from "@/components/ui/AppCard";
 
 interface PermissionCardProps {
   permission: Permission;
@@ -27,30 +28,31 @@ export function PermissionCard({ permission, onGrant }: PermissionCardProps) {
   };
 
   return (
-    <View
+    <AppCard
       style={[
         styles.card,
-        shadow.xs,
         {
-          backgroundColor: colors.card,
-          borderColor: isGranted ? colors.success + "60" : colors.border,
-          borderRadius: 14,
+          borderColor: isGranted ? `${colors.success}22` : colors.border,
         },
       ]}
+      padding={16}
+      shadowLevel="xs"
     >
       <View
         style={[
           styles.iconWrap,
           {
-            backgroundColor: isGranted ? colors.successMuted : colors.secondary,
-            borderRadius: 12,
+            backgroundColor: isGranted ? `${colors.success}0A` : `${colors.primary}0A`,
+            borderColor: isGranted ? `${colors.success}1A` : `${colors.primary}1A`,
+            borderWidth: 1,
+            borderRadius: 8,
           },
         ]}
       >
         <Feather
           name={permission.icon as keyof typeof Feather.glyphMap}
-          size={20}
-          color={isGranted ? colors.successForeground : colors.primary}
+          size={16}
+          color={isGranted ? colors.success : colors.primary}
         />
       </View>
 
@@ -62,8 +64,8 @@ export function PermissionCard({ permission, onGrant }: PermissionCardProps) {
       </View>
 
       {isGranted ? (
-        <View style={[styles.grantedBadge, { backgroundColor: colors.successMuted, borderRadius: 10 }]}>
-          <Feather name="check" size={14} color={colors.successForeground} />
+        <View style={[styles.grantedBadge, { backgroundColor: `${colors.success}0A`, borderColor: `${colors.success}22`, borderWidth: 1, borderRadius: 100 }]}>
+          <Feather name="check" size={13} color={colors.success} />
         </View>
       ) : (
         <Pressable
@@ -73,19 +75,19 @@ export function PermissionCard({ permission, onGrant }: PermissionCardProps) {
             styles.grantBtn,
             {
               backgroundColor: colors.primary,
-              borderRadius: 8,
-              opacity: pressed ? 0.8 : 1,
+              borderRadius: 6,
+              opacity: pressed ? 0.85 : 1,
             },
           ]}
         >
           {loading ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={styles.grantText}>Grant</Text>
+            <Text style={styles.grantText}>Allow</Text>
           )}
         </Pressable>
       )}
-    </View>
+    </AppCard>
   );
 }
 
@@ -93,40 +95,49 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    padding: spacing.base,
-    borderWidth: 1,
     gap: spacing.md,
+    borderRadius: 12,
   },
   iconWrap: {
-    width: 48,
-    height: 48,
+    width: 38,
+    height: 38,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  content: { flex: 1 },
-  title: { ...typography.bodyMedium, marginBottom: 3 },
-  desc: { ...typography.caption, lineHeight: 17 },
+  content: { flex: 1, gap: 1 },
+  title: {
+    ...typography.captionMedium,
+    fontWeight: "600",
+    letterSpacing: -0.1,
+    fontSize: 13,
+  },
+  desc: {
+    ...typography.caption,
+    fontSize: 11,
+    lineHeight: 15,
+  },
   grantedBadge: {
-    width: 34,
-    height: 34,
+    width: 28,
+    height: 28,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
   grantBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 62,
-    minHeight: 34,
+    minWidth: 56,
+    minHeight: 28,
     flexShrink: 0,
   },
   grantText: {
     color: "#fff",
     ...typography.captionMedium,
+    fontWeight: "600",
     letterSpacing: 0,
-    fontSize: 13,
+    fontSize: 11,
   },
 });

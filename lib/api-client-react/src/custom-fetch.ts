@@ -17,6 +17,24 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _orgId: string | null = null;
+let _userId: string | null = null;
+
+export function setLogCredentials(orgId: string | null, userId: string | null): void {
+  _orgId = orgId;
+  _userId = userId;
+}
+
+function maskAuthHeader(authHeader: string | null | undefined): string {
+  if (!authHeader) return "null";
+  if (authHeader.startsWith("Bearer ")) {
+    const token = authHeader.substring(7);
+    if (token.length <= 30) return `Bearer ${token}`;
+    return `Bearer ${token.substring(0, 15)}...${token.substring(token.length - 15)}`;
+  }
+  if (authHeader.length <= 30) return authHeader;
+  return `${authHeader.substring(0, 15)}...${authHeader.substring(authHeader.length - 15)}`;
+}
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -360,12 +378,95 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  const headersObject: Record<string, string> = {};
+  headers.forEach((value, key) => {
+    headersObject[key] = value;
+  });
+  let parsedBody: any = init.body;
+  if (typeof init.body === "string" && looksLikeJson(init.body)) {
+    try {
+      parsedBody = JSON.parse(init.body);
+    } catch {}
+  }
+
+  const authHeader = headers.get("authorization") || headersObject["authorization"];
+  const maskedAuthHeader = maskAuthHeader(authHeader);
+
+  let batchSize = "N/A";
+  if (parsedBody && typeof parsedBody === "object" && Array.isArray(parsedBody.logs)) {
+    batchSize = String(parsedBody.logs.length);
+  }
+
+  const isSyncRequest = requestInfo.url.includes("/logs/call");
+
+  if (isSyncRequest) {
+    console.log("=================== [ANDROID SYNC NOW EVENT] ===================");
+    console.log(`Final Request URL: ${requestInfo.url}`);
+    console.log(`HTTP Method: ${requestInfo.method}`);
+    console.log(`Authorization header: ${maskedAuthHeader}`);
+    console.log(`Complete JSON payload: ${JSON.stringify(parsedBody, null, 2)}`);
+  } else {
+    console.log("========================================[SYNC FLOW DETAILED LOGS]=============================");
+    console.log(`Final Request URL:    ${requestInfo.url}`);
+    console.log(`HTTP Method:          ${requestInfo.method}`);
+    console.log(`Authorization Header: ${maskedAuthHeader}`);
+    console.log(`Organization ID:      ${_orgId || "null"}`);
+    console.log(`User ID:              ${_userId || "null"}`);
+    console.log(`Batch Size:           ${batchSize}`);
+    console.log(`Request JSON Body:    ${JSON.stringify(parsedBody, null, 2)}`);
+  }
+
+  let response: Response;
+  let reachesBackend = "Yes";
+  try {
+    response = await fetch(input, { ...init, method, headers });
+  } catch (err: any) {
+    reachesBackend = `No (Fetch Network Error: ${err.message || err})`;
+    console.log(`Reaches Backend:      ${reachesBackend}`);
+    console.log("=============================================================================================");
+    throw err;
+  }
+
+  let responseBodyText = "";
+  try {
+    const clonedResponse = response.clone();
+    responseBodyText = await clonedResponse.text();
+  } catch (err) {
+    responseBodyText = `(Failed to read body: ${err})`;
+  }
+
+  let parsedResponseBody: any = responseBodyText;
+  try {
+    parsedResponseBody = JSON.parse(responseBodyText);
+  } catch {}
+
+  if (response.status === 504 || response.status === 502 || response.status === 503) {
+    reachesBackend = `No (Gateway/Proxy Error ${response.status})`;
+  }
+
+  const responseHeaders: Record<string, string> = {};
+  response.headers.forEach((value, key) => {
+    responseHeaders[key] = value;
+  });
+
+  if (isSyncRequest) {
+    console.log(`HTTP Status: ${response.status}`);
+    console.log(`Response Headers: ${JSON.stringify(responseHeaders, null, 2)}`);
+    console.log(`Response Body: ${JSON.stringify(parsedResponseBody, null, 2)}`);
+    console.log("===============================================================");
+  } else {
+    console.log(`Reaches Backend:      ${reachesBackend}`);
+    console.log(`Response Status Code: ${response.status} ${response.statusText}`);
+    console.log(`Response Headers:     ${JSON.stringify(responseHeaders, null, 2)}`);
+    console.log(`Response Body:        ${JSON.stringify(parsedResponseBody, null, 2)}`);
+    console.log("=============================================================================================");
+  }
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
     throw new ApiError(response, errorData, requestInfo);
   }
 
-  return (await parseSuccessBody(response, responseType, requestInfo)) as T;
+  const successData = await parseSuccessBody(response, responseType, requestInfo);
+  return successData as T;
 }

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
-import { shadow, typography } from "@/constants/spacing";
+import { shadow } from "@/constants/spacing";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline";
 type Size = "sm" | "md" | "lg";
@@ -43,16 +43,16 @@ export function AppButton({
 
   const variantStyles: Record<Variant, { bg: string; text: string; border?: string }> = {
     primary: { bg: colors.primary, text: colors.primaryForeground },
-    secondary: { bg: colors.secondary, text: colors.secondaryForeground },
+    secondary: { bg: colors.card, text: colors.foreground, border: colors.border },
     ghost: { bg: "transparent", text: colors.primary },
     danger: { bg: colors.destructive, text: colors.destructiveForeground },
     outline: { bg: "transparent", text: colors.primary, border: colors.primary },
   };
 
-  const sizeStyles: Record<Size, { height: number; px: number; fontSize: number }> = {
-    sm: { height: 36, px: 14, fontSize: 13 },
-    md: { height: 48, px: 20, fontSize: 15 },
-    lg: { height: 56, px: 24, fontSize: 16 },
+  const sizeStyles: Record<Size, { height: number; px: number; fontSize: number; borderRadius: number }> = {
+    sm: { height: 34, px: 12, fontSize: 13, borderRadius: 6 },
+    md: { height: 44, px: 16, fontSize: 14, borderRadius: 8 },
+    lg: { height: 50, px: 20, fontSize: 15, borderRadius: 10 },
   };
 
   const vs = variantStyles[variant];
@@ -72,13 +72,26 @@ export function AppButton({
           backgroundColor: vs.bg,
           height: ss.height,
           paddingHorizontal: ss.px,
-          borderRadius: 10,
-          borderWidth: vs.border ? 1.5 : 0,
+          borderRadius: ss.borderRadius,
+          borderWidth: vs.border ? 1 : 0,
           borderColor: vs.border ?? "transparent",
           alignSelf: fullWidth ? "stretch" : "flex-start",
-          opacity: pressed ? 0.82 : isDisabled ? 0.5 : 1,
+          opacity: pressed ? 0.85 : isDisabled ? 0.4 : 1,
         },
-        variant === "primary" && shadow.sm,
+        variant === "primary" && {
+          shadowColor: colors.primary,
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.12,
+          shadowRadius: 3,
+          elevation: 1,
+        },
+        variant === "secondary" && {
+          shadowColor: "#000000",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.03,
+          shadowRadius: 2,
+          elevation: 0.5,
+        },
         style,
       ]}
     >

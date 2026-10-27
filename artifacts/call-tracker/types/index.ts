@@ -44,3 +44,10 @@ export interface Permission {
   icon: string;
   status: PermissionStatus;
 }
+
+export interface SyncHistoryItem {
+  time: string;
+  count: number;
+  status: "Synced" | "Pending" | "Failed";
+}
+

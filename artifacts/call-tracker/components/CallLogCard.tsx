@@ -3,7 +3,7 @@ import * as Haptics from "expo-haptics";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { useColors } from "@/hooks/useColors";
 import spacing, { typography } from "@/constants/spacing";
 import type { CallLog } from "@/types";
@@ -38,8 +38,8 @@ export function CallLogCard({ log, onPress }: CallLogCardProps) {
         },
       ]}
     >
-      <View style={[styles.iconWrap, { backgroundColor: tc.color + "12", borderRadius: 22 }]}>
-        <Feather name={tc.icon} size={16} color={tc.color} />
+      <View style={[styles.iconWrap, { backgroundColor: `${tc.color}0A`, borderColor: `${tc.color}1A`, borderWidth: 1, borderRadius: 8 }]}>
+        <Feather name={tc.icon} size={14} color={tc.color} />
       </View>
 
       <View style={styles.main}>
@@ -60,7 +60,7 @@ export function CallLogCard({ log, onPress }: CallLogCardProps) {
         <Text style={[styles.duration, { color: log.type === "Missed" ? colors.destructive : colors.foreground }]}>
           {log.type === "Missed" ? "Missed" : log.duration}
         </Text>
-        <StatusBadge status={log.status} />
+        <StatusChip status={log.status} size="sm" />
       </View>
     </Pressable>
   );
@@ -71,21 +71,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: spacing.screenH,
-    paddingVertical: 13,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     gap: spacing.md,
   },
   iconWrap: {
-    width: 44,
-    height: 44,
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  main: { flex: 1, gap: 2 },
-  name: { ...typography.bodyMedium },
-  number: { ...typography.caption },
-  meta: { ...typography.caption },
-  right: { alignItems: "flex-end", gap: spacing.xs },
-  duration: { ...typography.captionMedium },
+  main: { flex: 1, gap: 1 },
+  name: { ...typography.captionMedium, fontWeight: "600", fontSize: 13, letterSpacing: -0.1 },
+  number: { ...typography.caption, fontSize: 11 },
+  meta: { ...typography.caption, fontSize: 10, marginTop: 1 },
+  right: { alignItems: "flex-end", gap: 3 },
+  duration: { ...typography.captionMedium, fontWeight: "600", fontSize: 11, letterSpacing: -0.1, marginBottom: 2 },
 });

@@ -6,10 +6,11 @@ import { shadow } from "@/constants/spacing";
 
 interface AppCardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: any;
   onPress?: () => void;
   padding?: number;
   shadowLevel?: keyof typeof shadow;
+  borderRadius?: number;
 }
 
 export function AppCard({
@@ -17,7 +18,8 @@ export function AppCard({
   style,
   onPress,
   padding = 16,
-  shadowLevel = "sm",
+  shadowLevel = "xs",
+  borderRadius = 12,
 }: AppCardProps) {
   const colors = useColors();
 
@@ -26,7 +28,7 @@ export function AppCard({
     shadow[shadowLevel],
     {
       backgroundColor: colors.card,
-      borderRadius: 14,
+      borderRadius,
       borderColor: colors.border,
       padding,
     },
@@ -37,7 +39,7 @@ export function AppCard({
     return (
       <Pressable
         onPress={onPress}
-        style={({ pressed }) => [...cardStyle, { opacity: pressed ? 0.88 : 1 }]}
+        style={({ pressed }) => [...cardStyle, { opacity: pressed ? 0.9 : 1 }]}
       >
         {children}
       </Pressable>

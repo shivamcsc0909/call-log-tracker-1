@@ -1,9 +1,11 @@
 import { create } from "zustand";
 
+import { ApiError } from "@workspace/api-client-react";
 import { syncService } from "@/services/syncService";
-import type { SyncRecord } from "@/types";
+import type { SyncHistoryItem, SyncRecord } from "@/types";
 
 interface SyncState extends SyncRecord {
+  history: SyncHistoryItem[];
   syncProgress: number;
   error: string | null;
   fetchStatus: () => Promise<void>;
@@ -16,13 +18,17 @@ export const useSyncStore = create<SyncState>((set) => ({
   failedCount: 0,
   lastSyncTime: null,
   isSyncing: false,
+  history: [],
   syncProgress: 0,
   error: null,
 
   fetchStatus: async () => {
     try {
-      const status = await syncService.getSyncStatus();
-      set({ ...status, error: null });
+      const [status, history] = await Promise.all([
+        syncService.getSyncStatus(),
+        syncService.getSyncHistory(),
+      ]);
+      set({ ...status, history, error: null });
     } catch {
       set({ error: "Failed to load sync status" });
     }
@@ -34,10 +40,19 @@ export const useSyncStore = create<SyncState>((set) => ({
       const result = await syncService.syncNow((progress) => {
         set({ syncProgress: progress });
       });
-      set({ ...result, isSyncing: false, syncProgress: 100 });
+      const history = await syncService.getSyncHistory();
+      set({ ...result, history, isSyncing: false, syncProgress: 100 });
       setTimeout(() => set({ syncProgress: 0 }), 800);
-    } catch {
-      set({ isSyncing: false, error: "Sync failed. Please try again." });
+    } catch (err: any) {
+      let message = "Sync failed. Please try again.";
+      if (err instanceof ApiError) {
+        const errorBody = err.data as any;
+        message = errorBody?.message || errorBody?.error || err.message;
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+      set({ isSyncing: false, error: message });
     }
   },
 }));
+

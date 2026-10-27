@@ -11,21 +11,29 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { AppButton } from "@/components/ui/AppButton";
 import { AppInput } from "@/components/ui/AppInput";
+import { AppCard } from "@/components/ui/AppCard";
 import { useColors } from "@/hooks/useColors";
 import { useAuthStore } from "@/store/authStore";
+import { CONFIG } from "@/constants/config";
 import spacing, { shadow, typography } from "@/constants/spacing";
 
 export default function LoginScreen() {
+  console.log("[LOGIN_SCREEN_RENDERED]");
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { login, isLoading } = useAuthStore();
 
-  const [email, setEmail] = useState("demo@company.com");
-  const [password, setPassword] = useState("123456");
+  React.useEffect(() => {
+    console.log("[LOGIN SCREEN LOADED]");
+  }, []);
+
+  const [email, setEmail] = useState(CONFIG.TEST_MODE ? "client.test@company.com" : "demo@company.com");
+  const [password, setPassword] = useState(CONFIG.TEST_MODE ? "Test@123456" : "123456");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
@@ -43,7 +51,7 @@ export default function LoginScreen() {
     if (!validate()) return;
     try {
       await login(email.trim(), password);
-      router.replace("/permissions");
+      router.replace("/select-organization");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Login failed";
       Alert.alert("Authentication Failed", msg);
@@ -58,67 +66,62 @@ export default function LoginScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.scroll,
-          { paddingTop: insets.top + spacing.xxxl, paddingBottom: insets.bottom + spacing.xl },
+          { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + spacing.xl },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {/* Brand Section */}
-        <View style={styles.brand}>
-          <View style={[styles.logoMark, { backgroundColor: colors.primary, borderRadius: 18 }, shadow.md]}>
-            <Feather name="phone-call" size={26} color="#fff" />
+        <View style={styles.brandContainer}>
+          <View style={[styles.logoOutline, { borderColor: colors.border }]}>
+            <LinearGradient
+              colors={["#2563EB", "#1D4ED8"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.logoMark}
+            >
+              <Feather name="phone-call" size={22} color="#fff" />
+            </LinearGradient>
           </View>
-          <View style={styles.brandText}>
-            <Text style={[styles.appName, { color: colors.foreground }]}>CallTrack Pro</Text>
-            <Text style={[styles.tagline, { color: colors.mutedForeground }]}>
-              Enterprise Call Management
-            </Text>
-          </View>
+          <Text style={[styles.appName, { color: colors.foreground }]}>CallTrack Pro</Text>
+          <Text style={[styles.tagline, { color: colors.mutedForeground }]}>
+            Enterprise Call Analytics & Cloud Synchronization
+          </Text>
         </View>
 
         {/* Form Card */}
-        <View
-          style={[
-            styles.formCard,
-            shadow.md,
-            {
-              backgroundColor: colors.card,
-              borderColor: colors.border,
-              borderRadius: 18,
-            },
-          ]}
-        >
+        <AppCard style={styles.formCard} padding={28} shadowLevel="sm">
           <View style={styles.formHeader}>
-            <Text style={[styles.formTitle, { color: colors.foreground }]}>Welcome back</Text>
+            <Text style={[styles.formTitle, { color: colors.foreground }]}>Sign In</Text>
             <Text style={[styles.formSub, { color: colors.mutedForeground }]}>
-              Sign in to your account to continue
+              Enter your corporate credentials to access your call tracking dashboard.
             </Text>
           </View>
 
           <View style={styles.fields}>
             <AppInput
-              label="Email Address"
-              placeholder="you@company.com"
+              label="Corporate Email"
+              placeholder="name@company.com"
               value={email}
               onChangeText={(v) => { setEmail(v); setErrors((e) => ({ ...e, email: undefined })); }}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               error={errors.email}
-              leftIcon={<Feather name="mail" size={16} color={colors.mutedForeground} />}
+              leftIcon={<Feather name="mail" size={14} color={colors.mutedForeground} />}
             />
             <AppInput
               label="Password"
-              placeholder="Enter your password"
+              placeholder="••••••••"
               value={password}
               onChangeText={(v) => { setPassword(v); setErrors((e) => ({ ...e, password: undefined })); }}
               secureTextEntry={!showPassword}
               error={errors.password}
-              leftIcon={<Feather name="lock" size={16} color={colors.mutedForeground} />}
+              leftIcon={<Feather name="lock" size={14} color={colors.mutedForeground} />}
               rightIcon={
                 <Feather
                   name={showPassword ? "eye-off" : "eye"}
-                  size={16}
+                  size={14}
                   color={colors.mutedForeground}
                 />
               }
@@ -139,26 +142,32 @@ export default function LoginScreen() {
                   [{ text: "OK" }]
                 )
               }
+              style={styles.forgotButton}
             />
           </View>
 
           <AppButton
-            label="Sign In"
+            label="Continue to Workspace"
             onPress={handleLogin}
             loading={isLoading}
             size="lg"
+            variant="primary"
+            style={styles.signInButton}
+            rightIcon={<Feather name="arrow-right" size={15} color="#fff" />}
           />
 
-          <View style={[styles.demoNote, { backgroundColor: colors.secondary, borderRadius: 10 }]}>
-            <Feather name="info" size={13} color={colors.primary} />
-            <Text style={[styles.demoText, { color: colors.secondaryForeground }]}>
-              Demo: demo@company.com · 123456
+          <View style={[styles.demoNote, { backgroundColor: `${colors.primary}08`, borderColor: `${colors.primary}12`, borderWidth: 1 }]}>
+            <Feather name="shield" size={13} color={colors.primary} />
+            <Text style={[styles.demoText, { color: colors.mutedForeground }]}>
+              {CONFIG.TEST_MODE
+                ? "Test environment active. Client credentials pre-configured."
+                : "Demo environment active. Credentials are pre-configured."}
             </Text>
           </View>
-        </View>
+        </AppCard>
 
         <Text style={[styles.footer, { color: colors.mutedForeground }]}>
-          CallTrack Pro · Enterprise Edition · v1.0.0
+          Secured by CallTrack Enterprise Policy. Version 1.0.0 (Build 100)
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -169,60 +178,93 @@ const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
     paddingHorizontal: spacing.screenH,
+    justifyContent: "center",
   },
-  brand: {
-    flexDirection: "row",
+  brandContainer: {
     alignItems: "center",
-    gap: spacing.md,
-    marginBottom: spacing.xxxl,
-    paddingHorizontal: spacing.xs,
+    marginBottom: spacing.xl,
+  },
+  logoOutline: {
+    borderWidth: 1,
+    padding: 6,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+    marginBottom: spacing.sm,
   },
   logoMark: {
-    width: 56,
-    height: 56,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
-  brandText: { flex: 1 },
   appName: {
-    fontSize: 22,
-    fontFamily: "Inter_700Bold",
-    letterSpacing: -0.5,
-  },
-  tagline: {
-    ...typography.caption,
-    marginTop: 2,
-  },
-  formCard: {
-    padding: spacing.xl,
-    borderWidth: 1,
-    marginBottom: spacing.xl,
-  },
-  formHeader: { marginBottom: spacing.xl },
-  formTitle: {
     fontSize: 24,
     fontFamily: "Inter_700Bold",
-    letterSpacing: -0.5,
-    marginBottom: spacing.xs,
+    letterSpacing: -0.6,
   },
-  formSub: { ...typography.body },
-  fields: { gap: spacing.base, marginBottom: spacing.base },
+  tagline: {
+    ...typography.captionMedium,
+    fontSize: 12,
+    marginTop: 6,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  formCard: {
+    borderWidth: 1,
+    marginBottom: spacing.lg,
+    borderRadius: 16,
+  },
+  formHeader: {
+    marginBottom: spacing.lg,
+  },
+  formTitle: {
+    fontSize: 20,
+    fontFamily: "Inter_700Bold",
+    letterSpacing: -0.4,
+    marginBottom: 6,
+  },
+  formSub: {
+    ...typography.captionMedium,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  fields: {
+    gap: spacing.base,
+  },
   forgotRow: {
     alignItems: "flex-end",
-    marginBottom: spacing.lg,
-    marginTop: -spacing.xs,
+    marginTop: spacing.sm,
+    marginBottom: spacing.base,
+  },
+  forgotButton: {
+    paddingHorizontal: 0,
+  },
+  signInButton: {
+    marginTop: spacing.xs,
   },
   demoNote: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    padding: spacing.md,
-    marginTop: spacing.base,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: spacing.lg,
   },
-  demoText: { ...typography.caption, flex: 1 },
+  demoText: {
+    ...typography.captionMedium,
+    fontSize: 11,
+    flex: 1,
+  },
   footer: {
     textAlign: "center",
     ...typography.caption,
-    marginTop: spacing.lg,
+    marginTop: spacing.sm,
+    fontSize: 11,
   },
 });

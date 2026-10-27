@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@workspace/api-client-react": "workspace:*",
     "tsx": "catalog:"
   }
 }

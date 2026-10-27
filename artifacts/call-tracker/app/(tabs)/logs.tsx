@@ -48,29 +48,34 @@ export default function LogsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Header Margin Spacer */}
+      <View style={{ height: insets.top }} />
+
       {/* Search */}
       <View style={[styles.searchWrap, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <View
           style={[
             styles.searchBar,
             {
-              backgroundColor: colors.input,
+              backgroundColor: colors.card,
               borderColor: colors.border,
-              borderRadius: 10,
+              borderRadius: 6,
             },
+            shadow.none,
           ]}
         >
-          <Feather name="search" size={16} color={colors.mutedForeground} />
+          <Feather name="search" size={13} color={colors.mutedForeground} style={styles.searchIcon} />
           <TextInput
             style={[styles.searchInput, { color: colors.foreground }]}
-            placeholder="Search by name or number…"
+            placeholder="Search logs by name or number…"
             placeholderTextColor={colors.mutedForeground}
             value={searchQuery}
             onChangeText={setSearch}
+            autoCorrect={false}
           />
           {searchQuery.length > 0 && (
-            <Pressable onPress={() => setSearch("")} hitSlop={8}>
-              <Feather name="x" size={15} color={colors.mutedForeground} />
+            <Pressable onPress={() => setSearch("")} hitSlop={10}>
+              <Feather name="x" size={13} color={colors.mutedForeground} />
             </Pressable>
           )}
         </View>
@@ -88,16 +93,17 @@ export default function LogsScreen() {
               style={[
                 styles.chip,
                 {
-                  backgroundColor: active ? meta.color : colors.muted,
-                  borderRadius: 20,
+                  backgroundColor: active ? `${meta.color}0A` : colors.card,
+                  borderColor: active ? `${meta.color}1F` : colors.border,
+                  borderRadius: 100,
                 },
               ]}
             >
-              <Feather name={meta.icon} size={11} color={active ? "#fff" : colors.mutedForeground} />
+              <Feather name={meta.icon} size={10} color={active ? meta.color : colors.mutedForeground} />
               <Text
                 style={[
                   styles.chipText,
-                  { color: active ? "#fff" : colors.mutedForeground },
+                  { color: active ? meta.color : colors.mutedForeground },
                 ]}
               >
                 {f}
@@ -109,16 +115,16 @@ export default function LogsScreen() {
 
       {/* Count */}
       {!isLoading && (
-        <View style={[styles.countRow, { borderBottomColor: colors.border }]}>
+        <View style={[styles.countRow, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
           <Text style={[styles.countText, { color: colors.mutedForeground }]}>
-            {filteredLogs.length} {filteredLogs.length === 1 ? "record" : "records"}
-            {searchQuery ? ` for "${searchQuery}"` : ""}
+            {filteredLogs.length} {filteredLogs.length === 1 ? "record found" : "records found"}
+            {searchQuery ? ` matching "${searchQuery}"` : ""}
           </Text>
         </View>
       )}
 
       {isLoading ? (
-        <View style={{ paddingTop: spacing.sm }}>
+        <View style={{ paddingTop: spacing.xs }}>
           {Array.from({ length: 7 }).map((_, i) => <CallLogSkeleton key={i} />)}
         </View>
       ) : (
@@ -140,7 +146,7 @@ export default function LogsScreen() {
             />
           }
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 100, paddingTop: spacing.xs }}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 100, paddingTop: 2 }}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -148,7 +154,7 @@ export default function LogsScreen() {
               tintColor={colors.primary}
             />
           }
-          ItemSeparatorComponent={() => <View style={{ height: 1 }} />}
+          ItemSeparatorComponent={() => <View style={{ height: 0 }} />}
         />
       )}
     </View>
@@ -166,19 +172,23 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    height: 44,
-    paddingHorizontal: spacing.md,
-    borderWidth: 1.5,
-    gap: spacing.sm,
+    height: 38,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    gap: 8,
+  },
+  searchIcon: {
+    marginTop: 1,
   },
   searchInput: {
     flex: 1,
     ...typography.body,
+    fontSize: 13,
     paddingVertical: 0,
   },
   filterRow: {
     flexDirection: "row",
-    gap: spacing.sm,
+    gap: spacing.xs + 2,
     paddingHorizontal: spacing.screenH,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
@@ -186,15 +196,16 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
   },
-  chipText: { ...typography.label, letterSpacing: 0.1 },
+  chipText: { ...typography.label, fontSize: 10, letterSpacing: 0, fontWeight: "600" },
   countRow: {
     paddingHorizontal: spacing.screenH,
-    paddingVertical: spacing.sm,
+    paddingVertical: 8,
     borderBottomWidth: 1,
   },
-  countText: { ...typography.caption },
+  countText: { ...typography.caption, fontSize: 10, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.2 },
 });
